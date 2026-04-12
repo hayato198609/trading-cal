@@ -1,0 +1,25 @@
+{
+  "name": "取引収支・資産管理",
+  "short_name": "取引収支",
+  "description": "株式取引の収支カレンダーと資産管理アプリ",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231a1a2e'/%3E%3Cpolyline points='28,125 68,85 108,105 148,54 168,67' fill='none' stroke='%234fc3f7' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='125' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='68' cy='85' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='108' cy='105' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='148' cy='54' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='168' cy='67' r='7' fill='%234fc3f7'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%231a1a2e'/%3E%3Cpolyline points='75,334 182,227 288,280 394,144 448,178' fill='none' stroke='%234fc3f7' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='75' cy='334' r='20' fill='%234fc3f7'/%3E%3Ccircle cx='182' cy='227' r='20' fill='%234fc3f7'/%3E%3Ccircle cx='288' cy='280' r='20' fill='%234fc3f7'/%3E%3Ccircle cx='394' cy='144' r='20' fill='%234fc3f7'/%3E%3Ccircle cx='448' cy='178' r='20' fill='%234fc3f7'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
