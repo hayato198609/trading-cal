@@ -96,13 +96,12 @@ header h1 { font-size: 17px; font-weight: 700; }
 
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr) minmax(44px, 52px);
+  grid-template-columns: repeat(7, 1fr);
   gap: 3px;
 }
 .cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: #aaa; padding: 6px 2px; }
 .cal-dow.sun { color: #e74c3c; }
 .cal-dow.sat { color: #3b82f6; }
-.cal-dow-week { font-size: 11px; font-weight: 700; color: #bbb; padding: 6px 4px; text-align: center; }
 
 .cal-cell {
   border-radius: 8px; border: 1.5px solid #eee;
@@ -125,7 +124,6 @@ header h1 { font-size: 17px; font-weight: 700; }
 }
 .cal-pnl-val.pos { color: #1e8a4a; }
 .cal-pnl-val.neg { color: #c0392b; }
-
 .cal-input {
   width: 100%; border: none; border-bottom: 1px solid #e0e0e0;
   outline: none; font-size: 12px; font-weight: 600;
@@ -133,23 +131,12 @@ header h1 { font-size: 17px; font-weight: 700; }
   -webkit-appearance: none;
 }
 .cal-input:focus { border-bottom-color: #1a1a2e; }
-.cal-week-total {
-  background: #f7f7f9; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 9px; font-weight: 700; text-align: center; padding: 4px; min-height: 72px;
-  word-break: break-all; line-height: 1.4;
-}
-.cal-week-total .pos  { color: #1e8a4a; }
-.cal-week-total .neg  { color: #c0392b; }
-.cal-week-total .zero { color: #ccc; }
 
 .pnl-stats { display: flex; gap: 10px; margin-top: 14px; }
-
 .pnl-stat-box { flex: 1; background: #f7f7f9; border-radius: 10px; padding: 12px 10px; text-align: center; }
 .pnl-stat-lbl { font-size: 11px; color: #999; font-weight: 600; margin-bottom: 5px; }
 .pnl-stat-val { font-size: 17px; font-weight: 700; color: #1a1a2e; }
 .pnl-stat-val.pos { color: #1e8a4a; }
-
 .pnl-stat-val.neg { color: #c0392b; }
 
 /* ASSET */
@@ -209,9 +196,14 @@ canvas#assetChart { width: 100%; display: block; }
 }
 
 @media (max-width: 600px) {
-  .cal-cell { min-height: 60px; padding: 4px 3px; }
-  .cal-week-total { min-height: 60px; font-size: 8px; }
-  .cal-input { font-size: 11px; }
+  .main { padding: 8px; }
+  .card { padding: 12px 8px; }
+  .cal-grid { gap: 2px; }
+  .cal-cell { min-height: 56px; padding: 3px 2px; gap: 1px; }
+  .cal-day { font-size: 10px; }
+  .cal-holiday { font-size: 7px; }
+  .cal-pnl-val { font-size: 9px; line-height: 1.1; word-break: break-all; }
+  .cal-input { font-size: 10px; padding: 1px 0; }
   .pnl-stat-val { font-size: 14px; }
   .asset-total-val { font-size: 22px; }
   .cat-name { min-width: 90px; font-size: 12px; }
@@ -251,7 +243,6 @@ canvas#assetChart { width: 100%; display: block; }
         各日付の欄に損益を入力（マイナスは − をつけて入力）
       </div>
       <div class="pnl-stats">
-        <div class="pnl-stat-box"><div class="pnl-stat-lbl">今週</div><div class="pnl-stat-val" id="s-weekly">¥0</div></div>
         <div class="pnl-stat-box"><div class="pnl-stat-lbl">今月</div><div class="pnl-stat-val" id="s-monthly">¥0</div></div>
         <div class="pnl-stat-box"><div class="pnl-stat-lbl">今年</div><div class="pnl-stat-val" id="s-yearly">¥0</div></div>
       </div>
@@ -261,7 +252,7 @@ canvas#assetChart { width: 100%; display: block; }
   <!-- 資産管理タブ -->
   <div class="tab-panel" id="panel-asset">
     <div class="asset-total-box">
-      <div class="asset-total-lbl">現圚の入力合計</div>
+      <div class="asset-total-lbl">現在の入力合計</div>
       <div class="asset-total-val" id="asset-total-disp">¥0</div>
     </div>
     <div class="card">
@@ -377,34 +368,29 @@ function renderCalSummary() {
   const mp=`${y}-${String(m+1).padStart(2,'0')}-`;
   let monthly=0; for(const [k,v] of Object.entries(state.dailyPnl)) if(k.startsWith(mp)) monthly+=v;
   let yearly=0;  for(const [k,v] of Object.entries(state.dailyPnl)) if(k.startsWith(`${today.getFullYear()}-`)) yearly+=v;
-  const dow=today.getDay(); let weekly=0;
-  for(let i=0;i<7;i++){const d=new Date(today);d.setDate(today.getDate()-dow+i);
-    const k=dateKey(d.getFullYear(),d.getMonth(),d.getDate());if(state.dailyPnl[k]!=null)weekly+=state.dailyPnl[k];}
   const set=(id,v)=>{const el=document.getElementById(id);if(!el)return;
     el.textContent=(v>=0?'+':'')+yen(v);el.className='pnl-stat-val '+pCls(v);};
-  set('s-weekly',weekly);set('s-monthly',monthly);set('s-yearly',yearly);
+  set('s-monthly',monthly);set('s-yearly',yearly);
 }
 function renderCalendar() {
   const y=state.calYear,m=state.calMonth,today=new Date();
   const todayKey=dateKey(today.getFullYear(),today.getMonth(),today.getDate());
   const holidays=getHolidays(y);
   document.getElementById('cal-title').textContent=`${y}年${m+1}月`;
-  const DOW=['日','月','火','f��','木','金','土'];
+  const DOW=['日','月','火','水','木','金','土'];
   const firstDow=new Date(y,m,1).getDay(),daysInMonth=new Date(y,m+1,0).getDate();
   const cells=[];
   for(let i=0;i<firstDow;i++)cells.push(null);
   for(let d=1;d<=daysInMonth;d++)cells.push(d);
   while(cells.length%7!==0)cells.push(null);
   let html=DOW.map((d,i)=>`<div class="cal-dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('');
-  html+=`<div class="cal-dow-week">週計</div>`;
   for(let row=0;row<cells.length/7;row++){
-    const week=cells.slice(row*7,row*7+7);let weekTotal=0,hasData=false;
+    const week=cells.slice(row*7,row*7+7);
     for(let col=0;col<7;col++){
       const d=week[col];
       if(d===null){html+=`<div class="cal-cell empty"></div>`;continue;}
       const key=dateKey(y,m,d),val=state.dailyPnl[key],holiday=holidays[key];
       const isToday=key===todayKey,isSun=col===0,isSat=col===6;
-      if(val!=null){weekTotal+=val;hasData=true;}
       let cls='cal-cell';
       if(isToday)cls+=' today';if(isSun)cls+=' sun';if(isSat)cls+=' sat';
       if(holiday&&!isSun)cls+=' hol';
@@ -420,8 +406,6 @@ function renderCalendar() {
           onkeydown="if(event.key==='Enter')this.blur()">
       </div>`;
     }
-    const wt=hasData?`<span class="${pCls(weekTotal)}">${(weekTotal>=0?'+':'')+yen(weekTotal)}</span>`:`<span class="zero">—</span>`;
-    html+=`<div class="cal-week-total">${wt}</div>`;
   }
   document.getElementById('cal-grid').innerHTML=html;
   renderCalSummary();
@@ -504,7 +488,7 @@ function renderChart(){
     ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
   });
 }
-function shortYen(v){if(Math.abs(v)>=1e8)return(v/1e8).toFixed(1)+'唄';if(Math.abs(v)>=1e4)return(v/1e4).toFixed(0)+'万';return Math.round(v).toLocaleString();}
+function shortYen(v){if(Math.abs(v)>=1e8)return(v/1e8).toFixed(1)+'億';if(Math.abs(v)>=1e4)return(v/1e4).toFixed(0)+'万';return Math.round(v).toLocaleString();}
 
 // ============================================================
 // PWA: Service Worker 登録（同じオリジンのsw.jsを使用）
@@ -527,7 +511,9 @@ window.addEventListener('beforeinstallprompt', e => {
   document.getElementById('install-banner').style.display = 'flex';
 });
 document.getElementById('install-btn').addEventListener('click', () => {
-  if (!deferredPrompt) returnredPrompt.userChoice.then(() => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
     deferredPrompt = null;
     document.getElementById('install-banner').style.display = 'none';
   });
