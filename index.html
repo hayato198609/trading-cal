@@ -96,7 +96,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr) minmax(56px, auto);
+  grid-template-columns: repeat(7, 1fr) minmax(44px, 52px);
   gap: 3px;
 }
 .cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: #aaa; padding: 6px 2px; }
@@ -125,6 +125,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 }
 .cal-pnl-val.pos { color: #1e8a4a; }
 .cal-pnl-val.neg { color: #c0392b; }
+
 .cal-input {
   width: 100%; border: none; border-bottom: 1px solid #e0e0e0;
   outline: none; font-size: 12px; font-weight: 600;
@@ -135,17 +136,20 @@ header h1 { font-size: 17px; font-weight: 700; }
 .cal-week-total {
   background: #f7f7f9; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; text-align: center; padding: 4px; min-height: 72px;
+  font-size: 9px; font-weight: 700; text-align: center; padding: 4px; min-height: 72px;
+  word-break: break-all; line-height: 1.4;
 }
 .cal-week-total .pos  { color: #1e8a4a; }
 .cal-week-total .neg  { color: #c0392b; }
 .cal-week-total .zero { color: #ccc; }
 
 .pnl-stats { display: flex; gap: 10px; margin-top: 14px; }
+
 .pnl-stat-box { flex: 1; background: #f7f7f9; border-radius: 10px; padding: 12px 10px; text-align: center; }
 .pnl-stat-lbl { font-size: 11px; color: #999; font-weight: 600; margin-bottom: 5px; }
 .pnl-stat-val { font-size: 17px; font-weight: 700; color: #1a1a2e; }
 .pnl-stat-val.pos { color: #1e8a4a; }
+
 .pnl-stat-val.neg { color: #c0392b; }
 
 /* ASSET */
@@ -206,7 +210,7 @@ canvas#assetChart { width: 100%; display: block; }
 
 @media (max-width: 600px) {
   .cal-cell { min-height: 60px; padding: 4px 3px; }
-  .cal-week-total { min-height: 60px; font-size: 10px; }
+  .cal-week-total { min-height: 60px; font-size: 8px; }
   .cal-input { font-size: 11px; }
   .pnl-stat-val { font-size: 14px; }
   .asset-total-val { font-size: 22px; }
@@ -244,7 +248,7 @@ canvas#assetChart { width: 100%; display: block; }
       </div>
       <div class="cal-grid" id="cal-grid"></div>
       <div style="margin-top:10px;font-size:11px;color:#ccc;text-align:center">
-        各日付の欄に損益を入力（マイナスは − をつすて入力）
+        各日付の欄に損益を入力（マイナスは − をつけて入力）
       </div>
       <div class="pnl-stats">
         <div class="pnl-stat-box"><div class="pnl-stat-lbl">今週</div><div class="pnl-stat-val" id="s-weekly">¥0</div></div>
@@ -257,7 +261,7 @@ canvas#assetChart { width: 100%; display: block; }
   <!-- 資産管理タブ -->
   <div class="tab-panel" id="panel-asset">
     <div class="asset-total-box">
-      <div class="asset-total-lbl">現在の入力合計</div>
+      <div class="asset-total-lbl">現圚の入力合計</div>
       <div class="asset-total-val" id="asset-total-disp">¥0</div>
     </div>
     <div class="card">
@@ -385,7 +389,7 @@ function renderCalendar() {
   const todayKey=dateKey(today.getFullYear(),today.getMonth(),today.getDate());
   const holidays=getHolidays(y);
   document.getElementById('cal-title').textContent=`${y}年${m+1}月`;
-  const DOW=['日','月','火','水','木','金','土'];
+  const DOW=['日','月','火','f��','木','金','土'];
   const firstDow=new Date(y,m,1).getDay(),daysInMonth=new Date(y,m+1,0).getDate();
   const cells=[];
   for(let i=0;i<firstDow;i++)cells.push(null);
@@ -449,7 +453,7 @@ function setAssetInput(cat,rawVal){
 }
 function addCategory(){
   const inp=document.getElementById('new-cat-name'),name=inp.value.trim();if(!name)return;
-  if(state.categories.includes(name)){alert('同じ名前のカヅゴリーが既にあります');return;}
+  if(state.categories.includes(name)){alert('同じ名前のカテゴリーが既にあります');return;}
   state.categories.push(name);inp.value='';save();renderCatList();
 }
 function deleteCategory(idx){
@@ -462,7 +466,7 @@ function recordAsset(){
   const ei=state.assetRecords.findIndex(r=>r.year===now.getFullYear()&&r.month===now.getMonth()+1);
   const rec={year:now.getFullYear(),month:now.getMonth()+1,day:now.getDate(),total,values};
   if(ei>=0)state.assetRecords[ei]=rec;else state.assetRecords.push(rec);
-  save();renderChart();alert(`${now.getFullYear()}�${now.getMonth()+1}月の資産 ${yen(total)} を記録しました`);
+  save();renderChart();alert(`${now.getFullYear()}年${now.getMonth()+1}月の資産 ${yen(total)} を記録しました`);
 }
 
 // ============================================================
@@ -470,7 +474,7 @@ function recordAsset(){
 // ============================================================
 function changeChartYear(delta){state.chartYear+=delta;save();renderChart();}
 function renderChart(){
-  const y=state.chartYear;document.getElementById('chart-year-lbl').textContent=`${y}�`;
+  const y=state.chartYear;document.getElementById('chart-year-lbl').textContent=`${y}年`;
   const canvas=document.getElementById('assetChart'),noData=document.getElementById('chart-no-data');
   const months=Array.from({length:12},(_,i)=>i+1);
   const vals=months.map(mo=>{const r=state.assetRecords.find(r=>r.year===y&&r.month===mo);return r?r.total:null;});
@@ -479,14 +483,10 @@ function renderChart(){
   const W=canvas.parentElement.clientWidth-40,H=200;
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
-  const PAD={top:16,right:16,bottom:36,left:72},cW=W-PAD.left-PAD.right,cH=H-PAD.top-PAD.bottom;
+  const PAD={top:16,right:16,bottom:36,left:8},cW=W-PAD.left-PAD.right,cH=H-PAD.top-PAD.bottom;
   const dv=vals.filter(v=>v!==null);let maxV=Math.max(...dv),minV=Math.min(...dv);
   if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
   const xOf=mo=>PAD.left+((mo-1)/11)*cW,yOf=v=>PAD.top+(1-(v-minV)/(maxV-minV))*cH;
-  ctx.strokeStyle='#eee';ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){const v=minV+(maxV-minV)*(i/4),yy=yOf(v);
-    ctx.beginPath();ctx.moveTo(PAD.left,yy);ctx.lineTo(W-PAD.right,yy);ctx.stroke();
-    ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(shortYen(v),PAD.left-4,yy+3);}
   ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='center';
   months.forEach(mo=>ctx.fillText(mo+'月',xOf(mo),H-PAD.bottom+14));
   const pts=[];vals.forEach((v,i)=>{if(v!==null)pts.push([xOf(i+1),yOf(v),v]);});
@@ -501,7 +501,7 @@ function renderChart(){
   pts.forEach(([x,y,v])=>{
     ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#4fc3f7';ctx.fill();
     ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(shortYen(v),x,y-9);
+    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
   });
 }
 function shortYen(v){if(Math.abs(v)>=1e8)return(v/1e8).toFixed(1)+'唄';if(Math.abs(v)>=1e4)return(v/1e4).toFixed(0)+'万';return Math.round(v).toLocaleString();}
@@ -527,9 +527,7 @@ window.addEventListener('beforeinstallprompt', e => {
   document.getElementById('install-banner').style.display = 'flex';
 });
 document.getElementById('install-btn').addEventListener('click', () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  deferredPrompt.userChoice.then(() => {
+  if (!deferredPrompt) returnredPrompt.userChoice.then(() => {
     deferredPrompt = null;
     document.getElementById('install-banner').style.display = 'none';
   });
