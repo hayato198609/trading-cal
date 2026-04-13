@@ -124,13 +124,45 @@ header h1 { font-size: 17px; font-weight: 700; }
 }
 .cal-pnl-val.pos { color: #1e8a4a; }
 .cal-pnl-val.neg { color: #c0392b; }
-.cal-input {
-  width: 100%; border: none; border-bottom: 1px solid #e0e0e0;
-  outline: none; font-size: 12px; font-weight: 600;
-  text-align: center; background: transparent; padding: 2px 0; color: #333;
-  -webkit-appearance: none;
+.cal-cell:not(.empty) { cursor: pointer; }
+.cal-cell:not(.empty):active { opacity: 0.75; }
+
+/* 入力モーダル */
+.pnl-modal {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.45); align-items: center; justify-content: center;
 }
-.cal-input:focus { border-bottom-color: #1a1a2e; }
+.pnl-modal.open { display: flex; }
+.pnl-modal-box {
+  background: white; border-radius: 18px; padding: 24px 20px 20px;
+  width: 300px; max-width: 92vw; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.pnl-modal-title {
+  font-size: 13px; font-weight: 700; color: #999; text-align: center; margin-bottom: 14px;
+}
+.pnl-modal-input {
+  width: 100%; border: 2px solid #e0e0e0; border-radius: 10px;
+  padding: 12px 10px; font-size: 22px; font-weight: 700;
+  text-align: right; outline: none; -webkit-appearance: none;
+  color: #1a1a2e; background: #fafafa;
+}
+.pnl-modal-input:focus { border-color: #1a1a2e; background: white; }
+.pnl-modal-btns { display: flex; gap: 8px; margin-top: 14px; }
+.pnl-modal-cancel {
+  flex: 1; padding: 11px; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  background: #eee; color: #666;
+}
+.pnl-modal-ok {
+  flex: 2; padding: 11px; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  background: #1a1a2e; color: white;
+}
+.pnl-modal-clear {
+  display: block; width: 100%; margin-top: 8px; padding: 9px;
+  border: none; border-radius: 10px; font-size: 13px; font-weight: 600;
+  cursor: pointer; background: #fff0f0; color: #c0392b; text-align: center;
+}
 
 .pnl-stats { display: flex; gap: 10px; margin-top: 14px; }
 .pnl-stat-box { flex: 1; background: #f7f7f9; border-radius: 10px; padding: 12px 10px; text-align: center; }
@@ -211,6 +243,21 @@ canvas#assetChart { width: 100%; display: block; }
 </style>
 </head>
 <body>
+
+<!-- 損益入力モーダル -->
+<div class="pnl-modal" id="pnl-modal" onclick="pnlModalBgClick(event)">
+  <div class="pnl-modal-box">
+    <div class="pnl-modal-title" id="pnl-modal-title"></div>
+    <input class="pnl-modal-input" id="pnl-modal-input" type="text" inputmode="decimal"
+      placeholder="例: 5000 / -3000"
+      onkeydown="if(event.key==='Enter')confirmPnlModal()">
+    <div class="pnl-modal-btns">
+      <button class="pnl-modal-cancel" onclick="closePnlModal()">キャンセル</button>
+      <button class="pnl-modal-ok" onclick="confirmPnlModal()">確定</button>
+    </div>
+    <button class="pnl-modal-clear" onclick="clearPnlModal()">この日の損益を削除</button>
+  </div>
+</div>
 
 <div id="install-banner">
   <span>📱 ホーム画面に追加できます</span>
@@ -356,6 +403,34 @@ function changeMonth(delta) {
   if(state.calMonth<0) {state.calMonth=11;state.calYear--;}
   save(); renderCalendar();
 }
+let _editKey = null;
+function editPnl(key, label) {
+  _editKey = key;
+  document.getElementById('pnl-modal-title').textContent = label;
+  const inp = document.getElementById('pnl-modal-input');
+  const cur = state.dailyPnl[key];
+  inp.value = cur != null ? cur : '';
+  document.getElementById('pnl-modal').classList.add('open');
+  setTimeout(() => { inp.focus(); inp.select(); }, 80);
+}
+function closePnlModal() {
+  document.getElementById('pnl-modal').classList.remove('open');
+  _editKey = null;
+}
+function pnlModalBgClick(e) {
+  if (e.target === document.getElementById('pnl-modal')) closePnlModal();
+}
+function confirmPnlModal() {
+  if (_editKey === null) return;
+  setPnl(_editKey, document.getElementById('pnl-modal-input').value);
+  closePnlModal();
+}
+function clearPnlModal() {
+  if (_editKey === null) return;
+  delete state.dailyPnl[_editKey];
+  save(); renderCalendar();
+  closePnlModal();
+}
 function setPnl(key,rawVal) {
   const val=rawVal.replace(/[,，]/g,'').replace(/[−ー]/g,'-').trim();
   const n=parseFloat(val);
@@ -397,13 +472,8 @@ function renderCalendar() {
       if(val!=null)cls+=val>0?' has-pos':val<0?' has-neg':'';
       const holLabel=holiday?`<div class="cal-holiday">${holiday}</div>`:'';
       const pnlDisp=val!=null?`<div class="cal-pnl-val ${pCls(val)}">${(val>=0?'+':'')+yen(val)}</div>`:`<div class="cal-pnl-val"></div>`;
-      html+=`<div class="${cls}">
+      html+=`<div class="${cls}" onclick="editPnl('${key}','${y}�t${m+1}月${d}日')">
         <div class="cal-day">${d}</div>${holLabel}${pnlDisp}
-        <input class="cal-input" type="text" inputmode="numeric"
-          value="${val!=null?val:''}" placeholder=""
-          onchange="setPnl('${key}',this.value)"
-          onfocus="this.select()"
-          onkeydown="if(event.key==='Enter')this.blur()">
       </div>`;
     }
   }
@@ -431,7 +501,7 @@ function renderCatList(){
   updateAssetTotal();
 }
 function setAssetInput(cat,rawVal){
-  const v=rawVal.replace(/[,，]/g,'').replace(/[−ー]/g,'-').trim(),n=parseFloat(v);
+  const v=rawVal.replace(/[,，]/g,'').replace(/B−ー]/g,'-').trim(),n=parseFloat(v);
   if(v===''||isNaN(n))delete state.assetInput[cat];else state.assetInput[cat]=n;
   save();updateAssetTotal();
 }
