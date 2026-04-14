@@ -277,6 +277,670 @@ canvas#assetChart { width: 100%; display: block; }
   .cal-cell { min-height: 56px; padding: 3px 2px; gap: 1px; }
   .cal-day { font-size: 10px; }
   .cal-holiday { font-size: 7px; }
+  .cal-pnl-val { font-size: 8px; line-height: 1.1; white-space: nowrap; overflow: hidden; }
+  .cal-week-panel { width: 44px; border-radius: 8px; }
+  .cal-week-hdr { font-size: 9px; padding: 4px 2px; }
+  .cal-week-item { min-height: 56px; padding: 3px 2px; }
+  .cal-week-lbl { font-size: 7px; }
+  .cal-week-val { font-size: 9px; }
+  .cal-input { font-size: 10px; padding: 1px 0; }
+  .pnl-stat-val { font-size: 14px; }
+  .asset-total-val { font-size: 22px; }
+  .cat-name { min-width: 90px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 損益入力モーダル -->
+<div class="pnl-modal" id="pnl-modal" onclick="pnlModalBgClick(event)">
+  <div class="pnl-modal-box">
+    <div class="pnl-modal-title" id="pnl-modal-title"></div>
+    <input class="pnl-modal-input" id="pnl-modal-input" type="text" inputmode="decimal"
+      placeholder="例: 5000 / -3000"
+      onkeydown="if(event.key==='Enter')confirmPnlModal()">
+    <div class="pnl-modal-btns">
+      <button class="pnl-modal-cancel" onclick="closePnlModal()">キャンセル</button>
+      <button class="pnl-modal-ok" onclick="confirmPnlModal()">確定</button>
+    </div>
+    <button class="pnl-modal-clear" onclick="clearPnlModal()">この日の損益を削除</button>
+  </div>
+</div>
+
+<div id="install-banner">
+  <span>📱 ホーム画面に追加できます</span>
+  <button id="install-btn">インストール</button>
+  <button class="close-btn" onclick="document.getElementById('install-banner').style.display='none'">×</button>
+</div>
+
+<header>
+  <span style="font-size:22px">💹</span>
+  <h1>取引収支・資産管理</h1>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('cal')">取引収支</button>
+  <button class="tab-btn"        onclick="switchTab('asset')">資産管理</button>
+</div>
+
+<div class="main">
+
+  <!-- カレンダータブ -->
+  <div class="tab-panel active" id="panel-cal">
+    <div class="card">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+        <h2 id="cal-title"></h2>
+        <button class="cal-nav-btn" onclick="changeMonth(+1)">›</button>
+      </div>
+      <div class="cal-layout">
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-week-panel" id="cal-week-panel"></div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:#ccc;text-align:center">
+        各日付の欄に損益を入力（マイナスは − をつけて入力）
+      </div>
+      <div class="pnl-stats">
+        <div class="pnl-stat-box"><div class="pnl-stat-lbl">今月</div><div class="pnl-stat-val" id="s-monthly">¥0</div></div>
+        <div class="pnl-stat-box"><div class="pnl-stat-lbl">今年</div><div class="pnl-stat-val" id="s-yearly">¥0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 資産管理タブ -->
+  <div class="tab-panel" id="panel-asset">
+    <div class="asset-total-box">
+      <div class="asset-total-lbl">現在の入力合計</div>
+      <div class="asset-total-val" id="asset-total-disp">¥0</div>
+    </div>
+    <div class="card">
+      <div class="section-title">💰 カテゴリー別入力</div>
+      <div class="cat-list" id="cat-list"></div>
+      <div class="add-cat-row">
+        <input class="add-cat-input" id="new-cat-name" type="text" placeholder="新しいカテゴリー名を入力">
+        <button class="btn btn-small" onclick="addCategory()">＋ 追加</button>
+      </div>
+      <button class="btn btn-record" onclick="recordAsset()">📅 今日の総資産を記録</button>
+    </div>
+    <div class="card">
+      <div class="chart-nav">
+        <button class="cal-nav-btn" onclick="changeChartYear(-1)">‹</button>
+        <span id="chart-year-lbl"></span>
+        <button class="cal-nav-btn" onclick="changeChartYear(+1)">›</button>
+      </div>
+      <canvas id="assetChart" height="200"></canvas>
+      <div id="chart-no-data" style="text-align:center;color:#ccc;font-size:13px;padding:30px 0;display:none">記録がありません</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const TODAY = new Date();
+let state = {
+  activeTab: 'cal',
+  dailyPnl:  {},
+  calYear:   TODAY.getFullYear(),
+  calMonth:  TODAY.getMonth(),
+  categories:   ['現金・預金'],
+  assetInput:   {},
+  assetRecords: [],
+  chartYear:    TODAY.getFullYear()
+};
+function load() {
+  try { const s = localStorage.getItem('stk_cal_v3'); if (s) state = {...state, ...JSON.parse(s)}; } catch(e) {}
+}
+function save() {
+  try { localStorage.setItem('stk_cal_v3', JSON.stringify(state)); } catch(e) {}
+}
+function yen(n) { return n==null||isNaN(n) ? '—' : '¥'+Math.round(n).toLocaleString('ja-JP'); }
+function pCls(n) { return n>0?'pos':n<0?'neg':''; }
+function dateKey(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ============================================================
+// TAB
+// ============================================================
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach((b,i) =>
+    b.classList.toggle('active', (i===0&&tab==='cal')||(i===1&&tab==='asset'))
+  );
+  document.querySelectorAll('.tab-panel').forEach(p =>
+    p.classList.toggle('active', p.id==='panel-'+tab)
+  );
+  if (tab==='asset') { renderCatList(); renderChart(); }
+}
+
+// ============================================================
+// 祝日
+// ============================================================
+const _holCache = {};
+function getHolidays(year) {
+  if (_holCache[year]) return _holCache[year];
+  const h = {};
+  const add = (mo,da,name) => { if (!da||da<1) return; h[`${year}-${String(mo).padStart(2,'0')}-${String(da).padStart(2,'0')}`]=name; };
+  const nthMon = (mo,n) => {
+    const d=new Date(year,mo-1,1); let cnt=0;
+    for(let i=0;i<31;i++,d.setDate(d.getDate()+1)){if(d.getMonth()!==mo-1)break;if(d.getDay()===1&&++cnt===n)return d.getDate();}
+  };
+  add(1,1,'元日');add(2,11,'建国記念の日');add(2,23,'天皇誕生日');
+  add(4,29,'昭和の日');add(5,3,'憲法記念日');add(5,4,'みどりの日');add(5,5,'こどもの日');
+  add(8,11,'山の日');add(11,3,'文化の日');add(11,23,'勤労感謝の日');
+  add(1,nthMon(1,2),'成人の日');add(7,nthMon(7,3),'海の日');
+  add(9,nthMon(9,3),'敬老の日');add(10,nthMon(10,2),'スポーツの日');
+  const yy=year-1980;
+  add(3,Math.floor(20.8431+0.242194*yy-Math.floor(yy/4)),'春分の日');
+  add(9,Math.floor(23.2488+0.242194*yy-Math.floor(yy/4)),'秋分の日');
+  for(const key of [...Object.keys(h)]){
+    const d=new Date(key+'T12:00:00');
+    if(d.getDay()===0){let sub=new Date(d);sub.setDate(d.getDate()+1);
+      while(true){const sk=`${sub.getFullYear()}-${String(sub.getMonth()+1).padStart(2,'0')}-${String(sub.getDate()).padStart(2,'0')}`;
+        if(!h[sk]){h[sk]='振替休日';break;}sub.setDate(sub.getDate()+1);}
+    }
+  }
+  _holCache[year]=h; return h;
+}
+
+// ============================================================
+// カレンダー
+// ============================================================
+function changeMonth(delta) {
+  state.calMonth+=delta;
+  if(state.calMonth>11){state.calMonth=0;state.calYear++;}
+  if(state.calMonth<0) {state.calMonth=11;state.calYear--;}
+  save(); renderCalendar();
+}
+let _editKey = null;
+function editPnl(key, label) {
+  _editKey = key;
+  document.getElementById('pnl-modal-title').textContent = label;
+  const inp = document.getElementById('pnl-modal-input');
+  const cur = state.dailyPnl[key];
+  inp.value = cur != null ? cur : '';
+  document.getElementById('pnl-modal').classList.add('open');
+  setTimeout(() => { inp.focus(); inp.select(); }, 80);
+}
+function closePnlModal() {
+  document.getElementById('pnl-modal').classList.remove('open');
+  _editKey = null;
+}
+function pnlModalBgClick(e) {
+  if (e.target === document.getElementById('pnl-modal')) closePnlModal();
+}
+function confirmPnlModal() {
+  if (_editKey === null) return;
+  setPnl(_editKey, document.getElementById('pnl-modal-input').value);
+  closePnlModal();
+}
+function clearPnlModal() {
+  if (_editKey === null) return;
+  delete state.dailyPnl[_editKey];
+  save(); renderCalendar();
+  closePnlModal();
+}
+function setPnl(key,rawVal) {
+  const val=rawVal.replace(/[,，]/g,'').replace(/[−ー]/g,'-').trim();
+  const n=parseFloat(val);
+  if(val===''||val==='-') delete state.dailyPnl[key];
+  else if(!isNaN(n))      state.dailyPnl[key]=n;
+  save(); renderCalendar();
+}
+function renderCalSummary() {
+  const today=new Date(),y=state.calYear,m=state.calMonth;
+  const mp=`${y}-${String(m+1).padStart(2,'0')}-`;
+  let monthly=0; for(const [k,v] of Object.entries(state.dailyPnl)) if(k.startsWith(mp)) monthly+=v;
+  let yearly=0;  for(const [k,v] of Object.entries(state.dailyPnl)) if(k.startsWith(`${today.getFullYear()}-`)) yearly+=v;
+  const set=(id,v)=>{const el=document.getElementById(id);if(!el)return;
+    el.textContent=(v>=0?'+':'')+yen(v);el.className='pnl-stat-val '+pCls(v);};
+  set('s-monthly',monthly);set('s-yearly',yearly);
+}
+function renderCalendar() {
+  const y=state.calYear,m=state.calMonth,today=new Date();
+  const todayKey=dateKey(today.getFullYear(),today.getMonth(),today.getDate());
+  const holidays=getHolidays(y);
+  document.getElementById('cal-title').textContent=`${y}�t${m+1}月`;
+  const DOW=['日','月','火','水','木','金','土'];
+  const firstDow=new Date(y,m,1).getDay(),daysInMonth=new Date(y,m+1,0).getDate();
+  const cells=[];
+  for(let i=0;i<firstDow;i++)cells.push(null);
+  for(let d=1;d<=daysInMonth;d++)cells.push(d);
+  while(cells.length%7!==0)cells.push(null);
+  let html=DOW.map((d,i)=>`<div class="cal-dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('');
+  let panelHtml=`<div class="cal-week-hdr">週計</div>`;
+  for(let row=0;row<cells.length/7;row++){
+    const week=cells.slice(row*7,row*7+7);
+    let weekSum=null;
+    for(let col=0;col<7;col++){
+      const d=week[col];
+      if(d===null){html+=`<div class="cal-cell empty"></div>`;continue;}
+      const key=dateKey(y,m,d),val=state.dailyPnl[key],holiday=holidays[key];
+      const isToday=key===todayKey,isSun=col===0,isSat=col===6;
+      let cls='cal-cell';
+      if(isToday)cls+=' today';if(isSun)cls+=' sun';if(isSat)cls+=' sat';
+      if(holiday&&!isSun)cls+=' hol';
+      if(val!=null){cls+=val>0?' has-pos':val<0?' has-neg':'';weekSum=(weekSum||0)+val;}
+      const holLabel=holiday?`<div class="cal-holiday">${holiday}</div>`:'';
+      const pnlDisp=val!=null?`<div class="cal-pnl-val ${pCls(val)}">${(val>=0?'+':'')+yen(val)}</div>`:`<div class="cal-pnl-val"></div>`;
+      html+=`<div class="${cls}" onclick="editPnl('${key}','${y}�t${m+1}月${d}日')">
+        <div class="cal-day">${d}</div>${holLabel}${pnlDisp}
+      </div>`;
+    }
+    const wv=weekSum!=null?`<div class="cal-week-val ${pCls(weekSum)}">${(weekSum>=0?'+':'')+yen(weekSum)}</div>`:`<div class="cal-week-val">—</div>`;
+    panelHtml+=`<div class="cal-week-item"><div class="cal-week-lbl">週計</div>${wv}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+  document.getElementById('cal-week-panel').innerHTML=panelHtml;
+  renderCalSummary();
+}
+
+// ============================================================
+// 資産管理
+// ============================================================
+function calcAssetTotal(){return state.categories.reduce((s,c)=>s+(parseFloat(String(state.assetInput[c]||'0').replace(/,/g,''))||0),0);}
+function updateAssetTotal(){const el=document.getElementById('asset-total-disp');if(el)el.textContent=yen(calcAssetTotal());}
+function renderCatList(){
+  const list=document.getElementById('cat-list');if(!list)return;
+  list.innerHTML=state.categories.map((cat,idx)=>{
+    const val=state.assetInput[cat]!=null?state.assetInput[cat]:'';
+    const canDel=state.categories.length>1;
+    return `<div class="cat-row">
+      <div class="cat-name">${escHtml(cat)}</div>
+      <input class="cat-input" type="text" inputmode="numeric" value="${val}" placeholder="0"
+        oninput="setAssetInput('${escHtml(cat)}',this.value)" onfocus="this.select()">
+      ${canDel?`<button class="cat-del-btn" onclick="deleteCategory(${idx})">×</button>`:''}
+    </div>`;
+  }).join('');
+  updateAssetTotal();
+}
+function setAssetInput(cat,rawVal){
+  const v=rawVal.replace(/[,，]/g,'').replace(/[−ー]/g,'-').trim(),n=parseFloat(v);
+  if(v===''||isNaN(n))delete state.assetInput[cat];else state.assetInput[cat]=n;
+  save();updateAssetTotal();
+}
+function addCategory(){
+  const inp=document.getElementById('new-cat-name'),name=inp.value.trim();if(!name)return;
+  if(state.categories.includes(name)){alert('同じ名前のカテゴリーが既にあります');return;}
+  state.categories.push(name);inp.value='';save();renderCatList();
+}
+function deleteCategory(idx){
+  const cat=state.categories[idx];if(!confirm(`「${cat}」を削除しますか？`))return;
+  state.categories.splice(idx,1);delete state.assetInput[cat];save();renderCatList();
+}
+function recordAsset(){
+  const total=calcAssetTotal(),now=new Date(),values={};
+  state.categories.forEach(c=>{values[c]=parseFloat(String(state.assetInput[c]||'0').replace(/,/g,''))||0;});
+  const ei=state.assetRecords.findIndex(r=>r.year===now.getFullYear()&&r.month===now.getMonth()+1);
+  const rec={year:now.getFullYear(),month:now.getMonth()+1,day:now.getDate(),total,values};
+  if(ei>=0)state.assetRecords[ei]=rec;else state.assetRecords.push(rec);
+  save();renderChart();alert(`${now.getFullYear()}年${now.getMonth()+1}月の資産 ${yen(total)} を記録しました`);
+}
+
+// ============================================================
+// グラフ
+// ============================================================
+function changeChartYear(delta){state.chartYear+=delta;save();renderChart();}
+function renderChart(){
+  const y=state.chartYear;document.getElementById('chart-year-lbl').textContent=`${y}年`;
+  const canvas=document.getElementById('assetChart'),noData=document.getElementById('chart-no-data');
+  const months=Array.from({length:12},(_,i)=>i+1);
+  const vals=months.map(mo=>{const r=state.assetRecords.find(r=>r.year===y&&r.month===mo);return r?r.total:null;});
+  if(!vals.some(v=>v!==null)){canvas.style.display='none';noData.style.display='block';return;}
+  canvas.style.display='block';noData.style.display='none';
+  const W=canvas.parentElement.clientWidth-40,H=200;
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
+  const PAD={top:16,right:16,bottom:36,left:8},cW=W-PAD.left-PAD.right,cH=H-PAD.top-PAD.bottom;
+  const dv=vals.filter(v=>v!==null);let maxV=Math.max(...dv),minV=Math.min(...dv);
+  if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
+  const xOf=mo=>PAD.left+((mo-1)/11)*cW,yOf=v=>PAD.top+(1-(v-minV)/(maxV-minV))*cH;
+  ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='center';
+  months.forEach(mo=>ctx.fillText(mo+'月',xOf(mo),H-PAD.bottom+14));
+  const pts=[];vals.forEach((v,i)=>{if(v!==null)pts.push([xOf(i+1),yOf(v),v]);});
+  if(pts.length>=2){
+    ctx.beginPath();ctx.strokeStyle='#4fc3f7';ctx.lineWidth=2.5;ctx.lineJoin='round';
+    pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+    pts.forEach(([x,y])=>ctx.lineTo(x,y));
+    ctx.lineTo(pts[pts.length-1][0],PAD.top+cH);ctx.lineTo(pts[0][0],PAD.top+cH);
+    ctx.closePath();ctx.fillStyle='rgba(79,195,247,0.1)';ctx.fill();
+  }
+  pts.forEach(([x,y,v])=>{
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#4fc3f7';ctx.fill();
+    ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
+  });
+}
+function shortYen(v){if(Math.abs(v)>=1e8)return(v/1e8).toFixed(1)+'億';if(Math.abs(v)>=1e4)return(v/1e4).toFixed(0)+'万';return Math.round(v).toLocaleString();}
+
+// ============================================================
+// PWA: Service Worker 登録（同じオリジンのsw.jsを使用）
+// ============================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+
+// ============================================================
+// PWA: インストールバナー（Android Chrome）
+// ============================================================
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+document.getElementById('install-btn').addEventListener('click', () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('install-banner').style.display = 'none';
+  });
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').style.display = 'none';
+});
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  load();
+  renderCalendar();
+  if (state.activeTab === 'asset') switchTab('asset');
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement.id === 'new-cat-name') addCategory();
+});
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>取引収支・資産管理</title>
+
+<!-- PWA マニフェスト（静的ファイルで確実に認識させる） -->
+<link rel="manifest" href="./manifest.json">
+
+<!-- テーマカラー -->
+<meta name="theme-color" content="#1a1a2e">
+<meta name="description" content="株式取引の収支カレンダーと資産管理アプリ">
+
+<!-- iOS Safari PWA設定 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="取引収支">
+<!-- iOS用アイコン（SVG） -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231a1a2e'/%3E%3Cpolyline points='28,125 68,85 108,105 148,54 168,67' fill='none' stroke='%234fc3f7' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='125' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='68' cy='85' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='108' cy='105' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='148' cy='54' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='168' cy='67' r='7' fill='%234fc3f7'/%3E%3C/svg%3E">
+
+<!-- Android Chrome -->
+<meta name="mobile-web-app-capable" content="yes">
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: #f0f2f5;
+  color: #1a1a2e;
+  min-height: 100vh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+header {
+  background: #1a1a2e;
+  color: white;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+header h1 { font-size: 17px; font-weight: 700; }
+
+.tab-bar {
+  background: #1a1a2e;
+  display: flex;
+  padding: 0 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  position: sticky;
+  top: 52px;
+  z-index: 99;
+}
+.tab-btn {
+  padding: 10px 20px;
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn.active { color: #fff; border-bottom-color: #4fc3f7; }
+
+.main { padding: 16px; max-width: 860px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  margin-bottom: 14px;
+}
+
+/* CALENDAR */
+.cal-nav {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.cal-nav h2 { font-size: 18px; font-weight: 700; }
+.cal-nav-btn {
+  background: none; border: 1.5px solid #ddd; border-radius: 8px;
+  width: 34px; height: 34px; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.cal-nav-btn:active { background: #e0e0e0; }
+
+.cal-layout {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.cal-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: #aaa; padding: 6px 2px; }
+.cal-dow.sun { color: #e74c3c; }
+.cal-dow.sat { color: #3b82f6; }
+
+/* 週計 別枠パネル */
+.cal-week-panel {
+  width: 58px;
+  flex-shrink: 0;
+  background: #eef2ff;
+  border-radius: 10px;
+  border: 1.5px solid #c7d2fe;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.cal-week-hdr {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6366f1;
+  padding: 5px 4px 5px;
+  background: #e0e7ff;
+  border-bottom: 1.5px solid #c7d2fe;
+}
+.cal-week-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  padding: 4px 2px;
+  gap: 3px;
+  border-bottom: 1px solid #dde3ff;
+}
+.cal-week-item:last-child { border-bottom: none; }
+.cal-week-lbl { font-size: 8px; color: #a5b4fc; font-weight: 700; letter-spacing: 0.02em; }
+.cal-week-val { font-size: 10px; font-weight: 700; text-align: center; line-height: 1.2; color: #a5b4fc; }
+.cal-week-val.pos { color: #1e8a4a; }
+.cal-week-val.neg { color: #c0392b; }
+
+.cal-cell {
+  border-radius: 8px; border: 1.5px solid #eee;
+  padding: 5px 4px 4px; min-height: 72px;
+  display: flex; flex-direction: column; gap: 2px; background: white;
+  -webkit-tap-highlight-color: transparent;
+}
+.cal-cell.empty  { background: #fafafa; border-color: transparent; }
+.cal-cell.today  { border-color: #1a1a2e !important; }
+.cal-cell.has-pos { background: #f0faf4; border-color: #a7f3c0; }
+.cal-cell.has-neg { background: #fff4f4; border-color: #fca5a5; }
+.cal-cell.sun .cal-day { color: #e74c3c; }
+.cal-cell.sat .cal-day { color: #3b82f6; }
+.cal-cell.hol .cal-day { color: #e74c3c; }
+.cal-day { font-size: 12px; font-weight: 700; color: #555; line-height: 1; }
+.cal-holiday { font-size: 8px; color: #e74c3c; line-height: 1.1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cal-pnl-val {
+  font-size: 11px; font-weight: 700; text-align: center; line-height: 1.2;
+  flex: 1; display: flex; align-items: center; justify-content: center;
+}
+.cal-pnl-val.pos { color: #1e8a4a; }
+.cal-pnl-val.neg { color: #c0392b; }
+.cal-cell:not(.empty) { cursor: pointer; }
+.cal-cell:not(.empty):active { opacity: 0.75; }
+
+/* 入力モーダル */
+.pnl-modal {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.45); align-items: center; justify-content: center;
+}
+.pnl-modal.open { display: flex; }
+.pnl-modal-box {
+  background: white; border-radius: 18px; padding: 24px 20px 20px;
+  width: 300px; max-width: 92vw; box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+.pnl-modal-title {
+  font-size: 13px; font-weight: 700; color: #999; text-align: center; margin-bottom: 14px;
+}
+.pnl-modal-input {
+  width: 100%; border: 2px solid #e0e0e0; border-radius: 10px;
+  padding: 12px 10px; font-size: 22px; font-weight: 700;
+  text-align: right; outline: none; -webkit-appearance: none;
+  color: #1a1a2e; background: #fafafa;
+}
+.pnl-modal-input:focus { border-color: #1a1a2e; background: white; }
+.pnl-modal-btns { display: flex; gap: 8px; margin-top: 14px; }
+.pnl-modal-cancel {
+  flex: 1; padding: 11px; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  background: #eee; color: #666;
+}
+.pnl-modal-ok {
+  flex: 2; padding: 11px; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  background: #1a1a2e; color: white;
+}
+.pnl-modal-clear {
+  display: block; width: 100%; margin-top: 8px; padding: 9px;
+  border: none; border-radius: 10px; font-size: 13px; font-weight: 600;
+  cursor: pointer; background: #fff0f0; color: #c0392b; text-align: center;
+}
+
+.pnl-stats { display: flex; gap: 10px; margin-top: 14px; }
+.pnl-stat-box { flex: 1; background: #f7f7f9; border-radius: 10px; padding: 12px 10px; text-align: center; }
+.pnl-stat-lbl { font-size: 11px; color: #999; font-weight: 600; margin-bottom: 5px; }
+.pnl-stat-val { font-size: 17px; font-weight: 700; color: #1a1a2e; }
+.pnl-stat-val.pos { color: #1e8a4a; }
+.pnl-stat-val.neg { color: #c0392b; }
+
+/* ASSET */
+.section-title { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 14px; }
+.asset-total-box {
+  background: linear-gradient(135deg, #1a1a2e, #2d4066);
+  color: white; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; text-align: center;
+}
+.asset-total-lbl { font-size: 11px; opacity: 0.7; margin-bottom: 6px; }
+.asset-total-val { font-size: 28px; font-weight: 700; }
+
+.cat-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.cat-row { display: flex; align-items: center; gap: 10px; }
+.cat-name { font-size: 13px; font-weight: 600; color: #444; min-width: 110px; flex-shrink: 0; }
+.cat-input {
+  flex: 1; border: 1.5px solid #e0e0e0; border-radius: 8px;
+  padding: 7px 10px; font-size: 13px; font-weight: 600;
+  text-align: right; outline: none; background: #fafafa; -webkit-appearance: none;
+}
+.cat-input:focus { border-color: #1a1a2e; background: white; }
+.cat-del-btn {
+  background: none; border: none; color: #ccc; font-size: 20px;
+  cursor: pointer; padding: 4px 6px; -webkit-tap-highlight-color: transparent;
+}
+.cat-del-btn:active { color: #e74c3c; }
+
+.add-cat-row { display: flex; gap: 8px; margin-bottom: 16px; }
+.add-cat-input {
+  flex: 1; border: 1.5px dashed #ccc; border-radius: 8px;
+  padding: 7px 10px; font-size: 13px; outline: none;
+  background: transparent; color: #555; -webkit-appearance: none;
+}
+.add-cat-input:focus { border-color: #1a1a2e; }
+.add-cat-input::placeholder { color: #bbb; }
+
+.btn { border: none; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.btn:active { opacity: 0.75; }
+.btn-record { background: #1e8a4a; color: white; width: 100%; padding: 13px; font-size: 14px; border-radius: 10px; }
+.btn-small  { background: #e8e8ee; color: #555; padding: 7px 12px; }
+
+.chart-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.chart-nav span { font-size: 14px; font-weight: 700; }
+canvas#assetChart { width: 100%; display: block; }
+
+/* PWAインストールバナー */
+#install-banner {
+  display: none; background: #1e8a4a; color: white;
+  padding: 12px 16px; font-size: 13px; font-weight: 600;
+  align-items: center; justify-content: center; gap: 10px;
+}
+#install-banner button {
+  background: white; color: #1e8a4a; border: none; border-radius: 6px;
+  padding: 6px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+#install-banner .close-btn {
+  background: none; color: rgba(255,255,255,0.7); font-size: 20px; border: none; cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .main { padding: 8px; }
+  .card { padding: 12px 8px; }
+  .cal-grid { gap: 2px; grid-template-columns: repeat(7, 1fr); }
+  .cal-cell { min-height: 56px; padding: 3px 2px; gap: 1px; }
+  .cal-day { font-size: 10px; }
+  .cal-holiday { font-size: 7px; }
   .cal-pnl-val { font-size: 9px; line-height: 1.1; word-break: break-all; }
   .cal-week-panel { width: 44px; border-radius: 8px; }
   .cal-week-hdr { font-size: 9px; padding: 4px 2px; }
