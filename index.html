@@ -17,7 +17,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="取引収支">
 <!-- iOS用アイコン（SVG） -->
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231a1a2e'/%3E%3Cpolyline points='28,125 68,85 108,105 148,54 168,67' fill='none' stroke='%234fc3f7' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='125' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='68' cy='85' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='108' cy='105' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='148' cy='54' r='7' fill='%234fc3f7'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231a1a2e'/%3E%3Cpolyline points='28,125 68,85 108,105 148,54 168,67' fill='none' stroke='%234fc3f7' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='125' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='68' cy='85' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='108' cy='105' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='148' cy='54' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='168' cy='67' r='7' fill='%234fc3f7'/%3E%3C/svg%3E">
 
 <!-- Android Chrome -->
 <meta name="mobile-web-app-capable" content="yes">
@@ -376,7 +376,64 @@ canvas#assetChart { width: 100%; display: block; }
 @media (max-width: 600px) {
   .main { padding: 8px; }
   .card { padding: 12px 8px; }
-  .cal-g">‹</button>
+  .cal-grid { gap: 2px; grid-template-columns: repeat(7, 1fr); }
+  .cal-cell { min-height: 56px; padding: 3px 2px; gap: 1px; }
+  .cal-day { font-size: 10px; }
+  .cal-holiday { font-size: 7px; }
+  .cal-pnl-val { font-size: 8px; line-height: 1.1; white-space: nowrap; overflow: hidden; }
+  .cal-week-panel { width: 44px; border-radius: 8px; }
+  .cal-week-hdr { font-size: 9px; padding: 4px 2px; }
+  .cal-week-item { min-height: 56px; padding: 3px 2px; }
+  .cal-week-lbl { font-size: 7px; }
+  .cal-week-val { font-size: 9px; }
+  .cal-input { font-size: 10px; padding: 1px 0; }
+  .pnl-stat-val { font-size: 14px; }
+  .asset-total-val { font-size: 22px; }
+  .cat-name { min-width: 90px; font-size: 12px; }
+  .asset-dp-day { font-size: 11px; padding: 4px 1px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 損益入力モーダル -->
+<div class="pnl-modal" id="pnl-modal" onclick="pnlModalBgClick(event)">
+  <div class="pnl-modal-box">
+    <div class="pnl-modal-title" id="pnl-modal-title"></div>
+    <input class="pnl-modal-input" id="pnl-modal-input" type="text" inputmode="decimal"
+      placeholder="例: 5000 / -3000"
+      onkeydown="if(event.key==='Enter')confirmPnlModal()">
+    <div class="pnl-modal-btns">
+      <button class="pnl-modal-cancel" onclick="closePnlModal()">キャンセル</button>
+      <button class="pnl-modal-ok" onclick="confirmPnlModal()">確定</button>
+    </div>
+    <button class="pnl-modal-clear" onclick="clearPnlModal()">この日の損益を削除</button>
+  </div>
+</div>
+
+<div id="install-banner">
+  <span>📱 ホーム画面に追加できます</span>
+  <button id="install-btn">インストール</button>
+  <button class="close-btn" onclick="document.getElementById('install-banner').style.display='none'">×</button>
+</div>
+
+<header>
+  <span style="font-size:22px">💹</span>
+  <h1>取引収支・資産管理</h1>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('cal')">取引収支</button>
+  <button class="tab-btn"        onclick="switchTab('asset')">資産管理</button>
+</div>
+
+<div class="main">
+
+  <!-- カレンダータブ -->
+  <div class="tab-panel active" id="panel-cal">
+    <div class="card">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
         <h2 id="cal-title"></h2>
         <button class="cal-nav-btn" onclick="changeMonth(+1)">›</button>
       </div>
@@ -874,7 +931,7 @@ function renderChart(){
   pts.forEach(([x,y,v])=>{
     ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#4fc3f7';ctx.fill();
     ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
+    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-seref';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
   });
 }
 function shortYen(v){if(Math.abs(v)>=1e8)return(v/1e8).toFixed(1)+'億';if(Math.abs(v)>=1e4)return(v/1e4).toFixed(0)+'万';return Math.round(v).toLocaleString();}
