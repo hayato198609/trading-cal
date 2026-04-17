@@ -458,7 +458,10 @@ canvas#assetChart { width: 100%; display: block; }
         <h2 id="cal-title"></h2>
         <button class="cal-nav-btn" onclick="changeMonth(+1)">›</button>
       </div>
-      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-layout">
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-week-panel" id="cal-week-panel"></div>
+      </div>
       <div class="pnl-stats">
         <div class="pnl-stat-box"><div class="pnl-stat-lbl">今月</div><div class="pnl-stat-val" id="s-monthly">¥0</div></div>
         <div class="pnl-stat-box"><div class="pnl-stat-lbl">今年</div><div class="pnl-stat-val" id="s-yearly">¥0</div></div>
@@ -731,6 +734,29 @@ function renderCalendar() {
     html+=`<div class="${cls}" onclick="editDailyPnl('${key}','${y}年${m+1}月${d}日')"><div class="cal-day">${d}</div>${holLabel}${pnlLabel}</div>`;
   }
   document.getElementById('cal-grid').innerHTML=html;
+
+  // 週計パネル
+  const weekPanel=document.getElementById('cal-week-panel');
+  if(weekPanel){
+    const numWeeks=cells.length/7;
+    let wHtml='<div class="cal-week-hdr">週計</div>';
+    for(let w=0;w<numWeeks;w++){
+      const slice=cells.slice(w*7,(w+1)*7);
+      const startD=slice.find(c=>c!==null);
+      const endD=[...slice].reverse().find(c=>c!==null);
+      let wTotal=0,hasData=false;
+      for(let j=w*7;j<(w+1)*7;j++){
+        const d=cells[j];
+        if(d!==null){const v=state.dailyPnl[dateKey(y,m,d)];if(v!=null){wTotal+=v;hasData=true;}}
+      }
+      const lbl=startD&&endD?(startD===endD?`${startD}日`:`${startD}〜${endD}`):'—';
+      const valStr=hasData?(wTotal>=0?'+':'')+yen(wTotal):'—';
+      const cls=hasData?(wTotal>0?'pos':wTotal<0?'neg':''):'';
+      wHtml+=`<div class="cal-week-item"><div class="cal-week-lbl">${lbl}</div><div class="cal-week-val ${cls}">${valStr}</div></div>`;
+    }
+    weekPanel.innerHTML=wHtml;
+  }
+
   renderCalSummary();
 }
 
@@ -848,7 +874,7 @@ function addCategory(){
   state.categories.push(name);inp.value='';save();renderCatList();
 }
 function deleteCategory(idx){
-  const cat=state.categories[idx];if(!confirm(`「${cat}」を削除しますか？`))return;
+  const cat=state.categories[idx];if(!confirm(`「名前」を削除しますか？`))return;
   state.categories.splice(idx,1);delete state.assetInput[cat];save();renderCatList();
 }
 function recordAsset(){
@@ -916,7 +942,7 @@ function renderCatInlineChart(cat, cid) {
   else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
   const xOf = mo => PAD.left+((mo-1)/11)*cW;
   const yOf = v  => PAD.top+(1-(v-minV)/(maxV-minV))*cH;
-  ctx.fillStyle='#bbb'; ctx.font='9px sans-seref'; ctx.textAlign='center';
+  ctx.fillStyle='#bbb'; ctx.font='9px sans-serif'; ctx.textAlign='center';
   months.forEach(mo => ctx.fillText(mo+'\u6708', xOf(mo), H-PAD.bottom+12));
   const pts=[]; vals.forEach((v,i)=>{ if(v!==null) pts.push([xOf(i+1),yOf(v),v]); });
   const col='#6366f1';
@@ -961,7 +987,7 @@ function renderChart(){
   const dv=vals.filter(v=>v!==null);let maxV=Math.max(...dv),minV=Math.min(...dv);
   if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
   const xOf=mo=>PAD.left+((mo-1)/11)*cW,yOf=v=>PAD.top+(1-(v-minV)/(maxV-minV))*cH;
-  ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='center';
+  ctx.fillStyle='#aaa';ctx.font='10px sans-seref';ctx.textAlign='center';
   months.forEach(mo=>ctx.fillText(mo+'\u6708',xOf(mo),H-PAD.bottom+14));
   const pts=[];vals.forEach((v,i)=>{if(v!==null)pts.push([xOf(i+1),yOf(v),v]);});
   if(pts.length>=2){
