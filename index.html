@@ -119,6 +119,7 @@ header h1 { font-size: 17px; font-weight: 700; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
 }
 .cal-week-hdr {
   text-align: center;
@@ -141,8 +142,8 @@ header h1 { font-size: 17px; font-weight: 700; }
   border-bottom: 1px solid #dde3ff;
 }
 .cal-week-item:last-child { border-bottom: none; }
-.cal-week-lbl { font-size: 8px; color: #a5b4fc; font-weight: 700; letter-spacing: 0.02em; }
-.cal-week-val { font-size: 10px; font-weight: 700; text-align: center; line-height: 1.2; color: #a5b4fc; }
+.cal-week-lbl { font-size: 8px; color: #a5b4fc; font-weight: 700; letter-spacing: 0; }
+.cal-week-val { font-size: 11px; font-weight: 700; text-align: center; line-height: 1.2; color: #a5b4fc; font-variant-numeric: tabular-nums; }
 .cal-week-val.pos { color: #1e8a4a; }
 .cal-week-val.neg { color: #c0392b; }
 
@@ -874,7 +875,7 @@ function addCategory(){
   state.categories.push(name);inp.value='';save();renderCatList();
 }
 function deleteCategory(idx){
-  const cat=state.categories[idx];if(!confirm(`「名前」を削除しますか？`))return;
+  const cat=state.categories[idx];if(!confirm(`「${cat}」を削除しますか？`))return;
   state.categories.splice(idx,1);delete state.assetInput[cat];save();renderCatList();
 }
 function recordAsset(){
@@ -987,7 +988,7 @@ function renderChart(){
   const dv=vals.filter(v=>v!==null);let maxV=Math.max(...dv),minV=Math.min(...dv);
   if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
   const xOf=mo=>PAD.left+((mo-1)/11)*cW,yOf=v=>PAD.top+(1-(v-minV)/(maxV-minV))*cH;
-  ctx.fillStyle='#aaa';ctx.font='10px sans-seref';ctx.textAlign='center';
+  ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='center';
   months.forEach(mo=>ctx.fillText(mo+'\u6708',xOf(mo),H-PAD.bottom+14));
   const pts=[];vals.forEach((v,i)=>{if(v!==null)pts.push([xOf(i+1),yOf(v),v]);});
   if(pts.length>=2){
@@ -1001,7 +1002,7 @@ function renderChart(){
   pts.forEach(([x,y,v])=>{
     ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#4fc3f7';ctx.fill();
     ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-seref';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
+    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
   });
 }
 function shortYen(v){if(Math.abs(v)>=1e8)return(v/1e8).toFixed(1)+'億';if(Math.abs(v)>=1e4)return(v/1e4).toFixed(0)+'万';return Math.round(v).toLocaleString();}
