@@ -97,7 +97,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .cal-layout {
   display: flex;
   gap: 8px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 .cal-grid {
   flex: 1;
@@ -136,13 +136,11 @@ header h1 { font-size: 17px; font-weight: 700; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 72px;
+  min-height: 52px;
   padding: 4px 2px;
-  gap: 3px;
   border-bottom: 1px solid #dde3ff;
 }
 .cal-week-item:last-child { border-bottom: none; }
-.cal-week-lbl { font-size: 8px; color: #a5b4fc; font-weight: 700; letter-spacing: 0; }
 .cal-week-val { font-size: 11px; font-weight: 700; text-align: center; line-height: 1.2; color: #a5b4fc; font-variant-numeric: tabular-nums; }
 .cal-week-val.pos { color: #1e8a4a; }
 .cal-week-val.neg { color: #c0392b; }
@@ -405,8 +403,7 @@ canvas#assetChart { width: 100%; display: block; }
   .cal-pnl-val { font-size: 8px; line-height: 1.1; white-space: nowrap; overflow: hidden; }
   .cal-week-panel { width: 44px; border-radius: 8px; }
   .cal-week-hdr { font-size: 9px; padding: 4px 2px; }
-  .cal-week-item { min-height: 56px; padding: 3px 2px; }
-  .cal-week-lbl { font-size: 7px; }
+  .cal-week-item { min-height: 44px; padding: 3px 2px; }
   .cal-week-val { font-size: 9px; }
   .cal-input { font-size: 10px; padding: 1px 0; }
   .pnl-stat-val { font-size: 14px; }
@@ -716,7 +713,7 @@ function renderCalendar() {
   const DOW=['日','月','火','水','木','金','土'];
   const firstDow=new Date(y,m,1).getDay(),daysInMonth=new Date(y,m+1,0).getDate();
   const cells=[];
-  for(let i=0;i<firstDow;i++)cells.push(null);
+  for(let i=0;i<firstDoW;i++)cells.push(null);
   for(let d=1;d<=daysInMonth;d++)cells.push(d);
   while(cells.length%7!==0)cells.push(null);
   let html=DOW.map((d,i)=>`<div class="cal-dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('');
@@ -750,10 +747,9 @@ function renderCalendar() {
         const d=cells[j];
         if(d!==null){const v=state.dailyPnl[dateKey(y,m,d)];if(v!=null){wTotal+=v;hasData=true;}}
       }
-      const lbl=startD&&endD?(startD===endD?`${startD}日`:`${startD}〜${endD}`):'—';
       const valStr=hasData?(wTotal>=0?'+':'')+yen(wTotal):'—';
       const cls=hasData?(wTotal>0?'pos':wTotal<0?'neg':''):'';
-      wHtml+=`<div class="cal-week-item"><div class="cal-week-lbl">${lbl}</div><div class="cal-week-val ${cls}">${valStr}</div></div>`;
+      wHtml+=`<div class="cal-week-item"><div class="cal-week-val ${cls}">${valStr}</div></div>`;
     }
     weekPanel.innerHTML=wHtml;
   }
@@ -1002,7 +998,7 @@ function renderChart(){
   pts.forEach(([x,y,v])=>{
     ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#4fc3f7';ctx.fill();
     ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
+    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-seref';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
   });
 }
 function shortYen(v){if(Math.abs(v)>=1e8)return(v/1e8).toFixed(1)+'億';if(Math.abs(v)>=1e4)return(v/1e4).toFixed(0)+'万';return Math.round(v).toLocaleString();}
