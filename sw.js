@@ -1,11 +1,13 @@
-const CACHE_NAME = 'trading-cal-v2';
-const ASSETS = ['./'];
+const CACHE_NAME = 'trading-cal-v3';
+const ASSETS = ['./', './index.html'];
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
+
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
@@ -14,13 +16,21 @@ self.addEventListener('activate', event => {
   );
   self.clients.claim();
 });
+
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.open(CACHE_NAME).then(cache =>
       cache.match(event.request).then(cached => {
         const networked = fetch(event.request)
-          .then(response => { cache.put(event.request, response.clone()); return response; })
-          .catch(() => cached);
+          .then(response => {
+            if (response.ok) cache.put(event.request, response.clone());
+            return response;
+          })
+          .catch(() => cached || new Response('オフライン - ページをリロードしてください', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: {'Content-Type': 'text/plain; charset=utf-8'}
+          }));
         return cached || networked;
       })
     )
