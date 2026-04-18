@@ -106,7 +106,7 @@ header h1 { font-size: 17px; font-weight: 700; }
   gap: 3px;
 }
 .cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: #aaa; padding: 6px 2px; }
-.cal-dow.sun { color: #e743c3; }
+.cal-dow.sun { color: #e74c3c; }
 .cal-dow.sat { color: #3b82f6; }
 
 /* 週計 別枠パネル */
@@ -166,7 +166,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 }
 .cal-pnl-val.pos { color: #1e8a4a; }
 .cal-pnl-val.neg { color: #c0392b; }
-.cal-cell:not(.empty) { cursor: default; }
+.cal-cell:not(.empty) { cursor: pointer; }
 
 /* 入力モーダル */
 .pnl-modal {
@@ -430,7 +430,7 @@ canvas#assetChart { width: 100%; display: block; }
       <button class="pnl-modal-cancel" onclick="closePnlModal()">キャンセル</button>
       <button class="pnl-modal-ok" onclick="confirmPnlModal()">確定</button>
     </div>
-    <button class="pnl-modal-clear" onclick="clearPnlModal()">この月の収支を削除</button>
+    <button class="pnl-modal-clear" onclick="clearPnlModal()">この日の収支を削除</button>
   </div>
 </div>
 
@@ -460,7 +460,10 @@ canvas#assetChart { width: 100%; display: block; }
         <h2 id="cal-title"></h2>
         <button class="cal-nav-btn" onclick="changeMonth(+1)">›</button>
       </div>
-      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-layout">
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-week-panel" id="cal-week-panel"></div>
+      </div>
       <div class="pnl-stats">
         <div class="pnl-stat-box"><div class="pnl-stat-lbl">今月</div><div class="pnl-stat-val" id="s-monthly">¥0</div></div>
         <div class="pnl-stat-box"><div class="pnl-stat-lbl">今年</div><div class="pnl-stat-val" id="s-yearly">¥0</div></div>
@@ -529,9 +532,10 @@ function todayKey() {
 let state = {
   activeTab: 'cal',
   monthlyPnl: {},
+  dailyPnl: {},
   calYear:   TODAY.getFullYear(),
   calMonth:  TODAY.getMonth(),
-  categories:   ['現金・預金'],
+  categories:  ['現金・預金'],
   assetInput:   {},
   assetRecords: {},  // { "YYYY-MM-DD": {total, values} }
   chartYear:    TODAY.getFullYear(),
@@ -553,16 +557,6 @@ function load() {
           obj[k] = { total: r.total, values: r.values || {} };
         });
         loaded.assetRecords = obj;
-      }
-      // dailyPnl (YYYY-MM-DD) → monthlyPnl (YYYY-MM) マイグレーション
-      if (loaded.dailyPnl) {
-        const mp = {};
-        for (const [k,v] of Object.entries(loaded.dailyPnl)) {
-          const mo = k.substring(0,7);
-          mp[mo] = (mp[mo]||0) + v;
-        }
-        loaded.monthlyPnl = { ...mp, ...(loaded.monthlyPnl||{}) };
-        delete loaded.dailyPnl;
       }
       state = { ...state, ...loaded };
       // DP の年月を選択済み日付に合わせる
@@ -586,9 +580,9 @@ function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 // TAB
 // ============================================================
 function switchTab(tab) {
-  state.activeTab = tab;
+  state.ActiveTab = tab;
   document.querySelectorAll('.tab-btn').forEach((b,i) =>
-    b.classList.toggle('active', (i===0&&tab==='cal')||(i===1&&tab==='asset'))
+    b.classList.toggle('active', (i===00&&tab==='cal')||(i===1&&tab==='asset'))
   );
   document.querySelectorAll('.tab-panel').forEach(p =>
     p.classList.toggle('active', p.id==='panel-'+tab)
@@ -636,11 +630,11 @@ function changeMonth(delta) {
   save(); renderCalendar();
 }
 let _editKey = null;
-function editMonthlyPnl(key, label) {
+function editDailyPnl(key, label) {
   _editKey = key;
   document.getElementById('pnl-modal-title').textContent = label;
   const inp = document.getElementById('pnl-modal-input');
-  const cur = state.monthlyPnl[key];
+  const cur = state.dailyPnl[key];
   inp.value = cur != null ? cur : '';
   document.getElementById('pnl-modal').classList.add('open');
   setTimeout(() => { inp.focus(); inp.select(); }, 80);
@@ -654,30 +648,41 @@ function pnlModalBgClick(e) {
 }
 function confirmPnlModal() {
   if (_editKey === null) return;
-  setMonthlyPnl(_editKey, document.getElementById('pnl-modal-input').value);
+  setDailyPnl(_editKey, document.getElementById('pnl-modal-input').value);
   closePnlModal();
 }
 function clearPnlModal() {
   if (_editKey === null) return;
-  delete state.monthlyPnl[_editKey];
+  delete state.dailyPnl[_editKey];
   save(); renderCalendar();
   closePnlModal();
 }
-function setMonthlyPnl(key, rawVal) {
-  const val=rawVal.replace(/[,，]/g,'').replace(/[−ー]/g,'-').trim();
-  const n=parseFloat(val);
-  if(val===''||val==='-') delete state.monthlyPnl[key];
-  else if(!isNaN(n))      state.monthlyPnl[key]=n;
+function setDailyPnl(key, rawVal) {
+  const val = rawVal.replace(/[,，]/g,'').replace(/[−ー]/g,'-').trim();
+  const n = parseFloat(val);
+  if (val === '' || val === '-') delete state.dailyPnl[key];
+  else if (!isNaN(n)) state.dailyPnl[key] = n;
   save(); renderCalendar();
 }
+function calcMonthlyTotal(y, mo) {
+  const prefix = `${y}-${String(mo).padStart(2,'0')}-`;
+  let total = null;
+  for (const [k, v] of Object.entries(state.dailyPnl)) {
+    if (k.startsWith(prefix)) total = (total || 0) + v;
+  }
+  return total;
+}
 function renderCalSummary() {
-  const today=new Date(),y=state.calYear,m=state.calMonth;
-  const mk=`${y}-${String(m+1).padStart(2,'0')}`;
-  const monthly = state.monthlyPnl[mk] || 0;
-  let yearly=0; for(const [k,v] of Object.entries(state.monthlyPnl)) if(k.startsWith(`${today.getFullYear()}-`)) yearly+=v;
-  const set=(id,v)=>{const el=document.getElementById(id);if(!el)return;
-    el.textContent=(v>=0?'+':'')+yen(v);el.className='pnl-stat-val '+pCls(v);};
-  set('s-monthly',monthly);set('s-yearly',yearly);
+  const today = new Date(), y = state.calYear, m = state.calMonth;
+  const monthly = calcMonthlyTotal(y, m+1) || 0;
+  let yearly = 0;
+  const thisYear = today.getFullYear();
+  for (const [k, v] of Object.entries(state.dailyPnl)) {
+    if (k.startsWith(`${thisYear}-`)) yearly += v;
+  }
+  const set = (id, v) => { const el = document.getElementById(id); if (!el) return;
+    el.textContent = (v>=0?'+':'')+yen(v); el.className = 'pnl-stat-val '+pCls(v); };
+  set('s-monthly', monthly); set('s-yearly', yearly);
   renderMonthlyGrid();
 }
 function renderMonthlyGrid() {
@@ -689,7 +694,7 @@ function renderMonthlyGrid() {
   let html = '<div class="monthly-grid-inner">';
   for (let mo = 1; mo <= 12; mo++) {
     const key = `${y}-${String(mo).padStart(2,'0')}`;
-    const val = state.monthlyPnl[key];
+    const val = calcMonthlyTotal(y, mo);
     const isThis = key === thisMonthKey;
     let cls = 'monthly-cell';
     if (isThis) cls += ' this-month';
@@ -697,7 +702,7 @@ function renderMonthlyGrid() {
     const valHtml = val != null
       ? `<div class="monthly-cell-val ${pCls(val)}">${(val>=0?'+':'')+yen(val)}</div>`
       : `<div class="monthly-cell-val">—</div>`;
-    html += `<div class="${cls}" onclick="editMonthlyPnl('${key}','${y}年${mo}月')"><div class="monthly-cell-lbl">${mo}月</div>${valHtml}</div>`;
+    html += `<div class="${cls}"><div class="monthly-cell-lbl">${mo}月</div>${valHtml}</div>`;
   }
   html += '</div>';
   container.innerHTML = html;
@@ -706,29 +711,47 @@ function renderCalendar() {
   const y=state.calYear,m=state.calMonth,today=new Date();
   const todayKey_=dateKey(today.getFullYear(),today.getMonth(),today.getDate());
   const holidays=getHolidays(y);
-  const monthKey=`${y}-${String(m+1).padStart(2,'0')}`;
-  const monthVal=state.monthlyPnl[monthKey];
   document.getElementById('cal-title').textContent=`${y}\u5e74${m+1}\u6708`;
   const DOW=['日','月','火','水','木','金','土'];
-  const firstDoW=new Date(y,m,1).getDay(),daysInMonth=new Date(y,m+1,0).getDate();
+  const firstDow=new Date(y,m,1).getDay(),daysInMonth=new Date(y,m+1,0).getDate();
   const cells=[];
-  for(let i=0;i<firstDoW;i++)cells.push(null);
+  for(let i=0;i<firstDow;i++)cells.push(null);
   for(let d=1;d<=daysInMonth;d++)cells.push(d);
   while(cells.length%7!==0)cells.push(null);
+  const numWeeks=cells.length/7;
+  // カレンダーグリッド
   let html=DOW.map((d,i)=>`<div class="cal-dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('');
   for(let i=0;i<cells.length;i++){
     const d=cells[i];
     if(d===null){html+=`<div class="cal-cell empty"></div>`;continue;}
     const key=dateKey(y,m,d),holiday=holidays[key];
     const isToday=key===todayKey_,col=i%7,isSun=col===0,isSat=col===6;
+    const pnlVal=state.dailyPnl[key];
     let cls='cal-cell';
     if(isToday)cls+=' today';if(isSun)cls+=' sun';if(isSat)cls+=' sat';
     if(holiday&&!isSun)cls+=' hol';
-    if(monthVal!=null){cls+=monthVal>0?' has-pos':monthVal<0?' has-neg':'';}
+    if(pnlVal!=null){cls+=pnlVal>0?' has-pos':pnlVal<0?' has-neg':'';}
     const holLabel=holiday?`<div class="cal-holiday">${holiday}</div>`:'';
-    html+=`<div class="${cls}"><div class="cal-day">${d}</div>${holLabel}</div>`;
+    const pnlLabel=pnlVal!=null?`<div class="cal-pnl-val ${pCls(pnlVal)}">${shortYen(pnlVal)}</div>`:'';
+    html+=`<div class="${cls}" onclick="editDailyPnl('${key}','${y}\u5e74${m+1}\u6708${d}\u65e5')"><div class="cal-day">${d}</div>${holLabel}${pnlLabel}</div>`;
   }
   document.getElementById('cal-grid').innerHTML=html;
+  // 週計パネル
+  let weekHtml='<div class="cal-week-hdr">週計</div>';
+  for(let w=0;w<numWeeks;w++){
+    let weekTotal=null;
+    for(let c=0;c<7;c++){
+      const d=cells[w*7+c];
+      if(d===null)continue;
+      const v=state.dailyPnl[dateKey(y,m,d)];
+      if(v!=null)weekTotal=(weekTotal||0)+v;
+    }
+    const vHtml=weekTotal!=null
+      ?`<div class="cal-week-val ${pCls(weekTotal)}">${shortYen(weekTotal)}</div>`
+      :`<div class="cal-week-val">—</div>`;
+    weekHtml+=`<div class="cal-week-item">${vHtml}</div>`;
+  }
+  document.getElementById('cal-week-panel').innerHTML=weekHtml;
   renderCalSummary();
 }
 
@@ -914,7 +937,7 @@ function renderCatInlineChart(cat, cid) {
   else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
   const xOf = mo => PAD.left+((mo-1)/11)*cW;
   const yOf = v  => PAD.top+(1-(v-minV)/(maxV-minV))*cH;
-  ctx.fillStyle='#bbb'; ctx.font='9px sans-serif'; ctx.textAlign='center';
+  ctx.fillStyle='#bbb'; ctx.font='9px sans-seref'; ctx.textAlign='center';
   months.forEach(mo => ctx.fillText(mo+'\u6708', xOf(mo), H-PAD.bottom+12));
   const pts=[]; vals.forEach((v,i)=>{ if(v!==null) pts.push([xOf(i+1),yOf(v),v]); });
   const col='#6366f1';
@@ -929,7 +952,7 @@ function renderCatInlineChart(cat, cid) {
   pts.forEach(([x,y,v])=>{
     ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
     ctx.strokeStyle='white'; ctx.lineWidth=1.5; ctx.stroke();
-    ctx.fillStyle='#333'; ctx.font='bold 8px sans-serif'; ctx.textAlign='center';
+    ctx.fillStyle='#333'; ctx.font='bold 8px sans-seref'; ctx.textAlign='center';
     ctx.fillText(yen(v),x,y-8);
   });
 }
@@ -973,7 +996,7 @@ function renderChart(){
   pts.forEach(([x,y,v])=>{
     ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#4fc3f7';ctx.fill();
     ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
+    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-seref';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
   });
 }
 function shortYen(v){if(Math.abs(v)>=1e8)return(v/1e8).toFixed(1)+'億';if(Math.abs(v)>=1e4)return(v/1e4).toFixed(0)+'万';return Math.round(v).toLocaleString();}
