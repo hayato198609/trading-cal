@@ -542,7 +542,7 @@ let state = {
   // 資産日付ピッカー
   assetDpYear:  TODAY.getFullYear(),
   assetDpMonth: TODAY.getMonth(),
-  assetSelDate: todayKey()
+  assetSelDate : todayKey()
 };
 function load() {
   try {
@@ -607,7 +607,7 @@ function getHolidays(year) {
   add(8,11,'山の日');add(11,3,'文化の日');add(11,23,'勤労感謝の日');
   add(1,nthMon(1,2),'成人の日');add(7,nthMon(7,3),'海の日');
   add(9,nthMon(9,3),'敬老の日');add(10,nthMon(10,2),'スポーツの日');
-  const yy=year-1980;
+  const yy =year-1980;
   add(3,Math.floor(20.8431+0.242194*yy-Math.floor(yy/4)),'春分の日');
   add(9,Math.floor(23.2488+0.242194*yy-Math.floor(yy/4)),'秋分の日');
   for(const key of [...Object.keys(h)]){
@@ -658,7 +658,6 @@ function clearPnlModal() {
   closePnlModal();
 }
 function setDailyPnl(key, rawVal) {
-  const val = rawVal.replace(/[,，]/g,'').replace(/[−ー]/g,'-').trim();
   const n = parseFloat(val);
   if (val === '' || val === '-') delete state.dailyPnl[key];
   else if (!isNaN(n)) state.dailyPnl[key] = n;
@@ -676,7 +675,7 @@ function renderCalSummary() {
   const today = new Date(), y = state.calYear, m = state.calMonth;
   const monthly = calcMonthlyTotal(y, m+1) || 0;
   let yearly = 0;
-  const thisYear = today.getFullYear();
+  const thisYear  = today.getFullYear();
   for (const [k, v] of Object.entries(state.dailyPnl)) {
     if (k.startsWith(`${thisYear}-`)) yearly += v;
   }
@@ -699,6 +698,7 @@ function renderMonthlyGrid() {
     let cls = 'monthly-cell';
     if (isThis) cls += ' this-month';
     if (val != null) cls += val > 0 ? ' has-pos' : val < 0 ? ' has-neg' : '';
+    const lastReccord = state.assetRecords;
     const valHtml = val != null
       ? `<div class="monthly-cell-val ${pCls(val)}">${(val>=0?'+':'')+yen(val)}</div>`
       : `<div class="monthly-cell-val">—</div>`;
@@ -753,6 +753,27 @@ function renderCalendar() {
   }
   document.getElementById('cal-week-panel').innerHTML=weekHtml;
   renderCalSummary();
+  requestAnimationFrame(syncWeekPanel);
+}
+function syncWeekPanel() {
+  const grid=document.getElementById('cal-grid');
+  const panel=document.getElementById('cal-week-panel');
+  if(!grid||!panel)return;
+  const cells=[...grid.children];
+  if(cells.length<7)return;
+  // 曜日ヘッダー行の高さに週計ヘッダーを合わせる
+  const hdrH=Math.max(...cells.slice(0,7).map(c=>c.getBoundingClientRect().height));
+  const wHdr=panel.querySelector('.cal-week-hdr');
+  if(wHdr){wHdr.style.height=hdrH+'px';wHdr.style.boxSizing='border-box';}
+  // 各週行の高さに週計アイテムを合わせる
+  const wItems=[...panel.querySelectorAll('.cal-week-item')];
+  const dataCells=cells.slice(7);
+  wItems.forEach((item,i)=>{
+    const row=dataCells.slice(i*7,(i+1)*7);
+    if(!row.length)return;
+    const rowH=Math.max(...row.map(c=>c.getBoundingClientRect().height));
+    item.style.cssText=`height:${rowH}px;min-height:0;flex:0 0 ${rowH}px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-bottom:1px solid #dde3ff;`;
+  });
 }
 
 // ============================================================
@@ -929,7 +950,7 @@ function renderCatInlineChart(cat, cid) {
   const W = canvas.parentElement.clientWidth - 4, H = 160;
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
-  const PAD = {top:16,right:14,bottom:30,left:6};
+  const PAD= {top:16,right:14,bottom:30,left:6};
   const cW = W-PAD.left-PAD.right, cH = H-PAD.top-PAD.bottom;
   const dv = vals.filter(v=>v!==null);
   let maxV=Math.max(...dv), minV=Math.min(...dv);
@@ -959,7 +980,7 @@ function renderCatInlineChart(cat, cid) {
 
 // ============================================================
 // グラフ（月次 - 各月の最終記録を使用）
-// ============================================================
+// ================================================================================
 function changeChartYear(delta){state.chartYear+=delta;save();renderChart();}
 function renderChart(){
   const y=state.chartYear;document.getElementById('chart-year-lbl').textContent=`${y}\u5e74`;
@@ -1023,7 +1044,7 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 document.getElementById('install-btn').addEventListener('click', () => {
   if (!deferredPrompt) return;
-  deferredPrompt.promtt();
+  deferredPrompt.prompt();
   deferredPrompt.userChoice.then(() => {
     deferredPrompt = null;
     document.getElementById('install-banner').style.display = 'none';
