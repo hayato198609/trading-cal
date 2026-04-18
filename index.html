@@ -97,7 +97,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .cal-layout {
   display: flex;
   gap: 8px;
-  align-items: flex-start;
+  align-items: stretch;
 }
 .cal-grid {
   flex: 1;
@@ -535,7 +535,7 @@ let state = {
   dailyPnl: {},
   calYear:   TODAY.getFullYear(),
   calMonth:  TODAY.getMonth(),
-  categories:  ['現金・預金'],
+  categories:   ['現金・預金'],
   assetInput:   {},
   assetRecords: {},  // { "YYYY-MM-DD": {total, values} }
   chartYear:    TODAY.getFullYear(),
@@ -580,9 +580,9 @@ function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 // TAB
 // ============================================================
 function switchTab(tab) {
-  state.ActiveTab = tab;
+  state.activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach((b,i) =>
-    b.classList.toggle('active', (i===00&&tab==='cal')||(i===1&&tab==='asset'))
+    b.classList.toggle('active', (i===0&&tab==='cal')||(i===1&&tab==='asset'))
   );
   document.querySelectorAll('.tab-panel').forEach(p =>
     p.classList.toggle('active', p.id==='panel-'+tab)
@@ -937,7 +937,7 @@ function renderCatInlineChart(cat, cid) {
   else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
   const xOf = mo => PAD.left+((mo-1)/11)*cW;
   const yOf = v  => PAD.top+(1-(v-minV)/(maxV-minV))*cH;
-  ctx.fillStyle='#bbb'; ctx.font='9px sans-seref'; ctx.textAlign='center';
+  ctx.fillStyle='#bbb'; ctx.font='9px sans-serif'; ctx.textAlign='center';
   months.forEach(mo => ctx.fillText(mo+'\u6708', xOf(mo), H-PAD.bottom+12));
   const pts=[]; vals.forEach((v,i)=>{ if(v!==null) pts.push([xOf(i+1),yOf(v),v]); });
   const col='#6366f1';
@@ -952,7 +952,7 @@ function renderCatInlineChart(cat, cid) {
   pts.forEach(([x,y,v])=>{
     ctx.beginPath(); ctx.arc(x,y,3.5,0,Math.PI*2); ctx.fillStyle=col; ctx.fill();
     ctx.strokeStyle='white'; ctx.lineWidth=1.5; ctx.stroke();
-    ctx.fillStyle='#333'; ctx.font='bold 8px sans-seref'; ctx.textAlign='center';
+    ctx.fillStyle='#333'; ctx.font='bold 8px sans-serif'; ctx.textAlign='center';
     ctx.fillText(yen(v),x,y-8);
   });
 }
@@ -982,7 +982,7 @@ function renderChart(){
   const dv=vals.filter(v=>v!==null);let maxV=Math.max(...dv),minV=Math.min(...dv);
   if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
   const xOf=mo=>PAD.left+((mo-1)/11)*cW,yOf=v=>PAD.top+(1-(v-minV)/(maxV-minV))*cH;
-  ctx.fillStyle='#aaa';ctx.font='10px sans-seref';ctx.textAlign='center';
+  ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='center';
   months.forEach(mo=>ctx.fillText(mo+'\u6708',xOf(mo),H-PAD.bottom+14));
   const pts=[];vals.forEach((v,i)=>{if(v!==null)pts.push([xOf(i+1),yOf(v),v]);});
   if(pts.length>=2){
@@ -996,10 +996,10 @@ function renderChart(){
   pts.forEach(([x,y,v])=>{
     ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#4fc3f7';ctx.fill();
     ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-seref';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
+    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
   });
 }
-function shortYen(v){if(Math.abs(v)>=1e8)return(v/1e8).toFixed(1)+'億';if(Math.abs(v)>=1e4)return(v/1e4).toFixed(0)+'万';return Math.round(v).toLocaleString();}
+function shortYen(v){return(v<0?'-':'')+'¥'+Math.round(Math.abs(v)).toLocaleString('ja-JP');}
 
 // ============================================================
 // PWA: Service Worker 登録（同じオリジンのsw.jsを使用）
@@ -1023,7 +1023,7 @@ window.addEventListener('beforeinstallprompt', e => {
 });
 document.getElementById('install-btn').addEventListener('click', () => {
   if (!deferredPrompt) return;
-  deferredPrompt.prompt();
+  deferredPrompt.promtt();
   deferredPrompt.userChoice.then(() => {
     deferredPrompt = null;
     document.getElementById('install-banner').style.display = 'none';
