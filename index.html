@@ -95,13 +95,56 @@ header h1 { font-size: 17px; font-weight: 700; }
 .cal-nav-btn:active { background: #e0e0e0; }
 
 .cal-layout {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.cal-grid {
+  flex: 1;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 3px;
 }
 .cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: #aaa; padding: 6px 2px; }
 .cal-dow.sun { color: #e74c3c; }
 .cal-dow.sat { color: #3b82f6; }
+
+/* 週計 別枠パネル */
+.cal-week-panel {
+  width: 58px;
+  flex-shrink: 0;
+  background: #eef2ff;
+  border-radius: 10px;
+  border: 1.5px solid #c7d2fe;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.cal-week-hdr {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6366f1;
+  padding: 5px 4px 5px;
+  background: #e0e7ff;
+  border-bottom: 1.5px solid #c7d2fe;
+}
+.cal-week-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  padding: 4px 2px;
+  gap: 3px;
+  border-bottom: 1px solid #dde3ff;
+}
+.cal-week-item:last-child { border-bottom: none; }
+.cal-week-lbl { font-size: 8px; color: #a5b4fc; font-weight: 700; letter-spacing: 0.02em; }
+.cal-week-val { font-size: 10px; font-weight: 700; text-align: center; line-height: 1.2; color: #a5b4fc; }
+.cal-week-val.pos { color: #1e8a4a; }
+.cal-week-val.neg { color: #c0392b; }
 
 .cal-cell {
   border-radius: 8px; border: 1.5px solid #eee;
@@ -155,6 +198,11 @@ header h1 { font-size: 17px; font-weight: 700; }
   flex: 2; padding: 11px; border: none; border-radius: 10px;
   font-size: 14px; font-weight: 700; cursor: pointer;
   background: #1a1a2e; color: white;
+}
+.pnl-modal-clear {
+  display: block; width: 100%; margin-top: 8px; padding: 9px;
+  border: none; border-radius: 10px; font-size: 13px; font-weight: 600;
+  cursor: pointer; background: #fff0f0; color: #c0392b; text-align: center;
 }
 
 .pnl-stats { display: flex; gap: 10px; margin-top: 14px; }
@@ -218,14 +266,10 @@ header h1 { font-size: 17px; font-weight: 700; }
 }
 .cat-input:focus { border-color: #1a1a2e; background: white; }
 .cat-del-btn {
-  background: #fff0f0; border: 1.5px solid #fca5a5; border-radius: 8px;
-  color: #e74c3c; font-size: 16px; font-weight: 700;
-  cursor: pointer; min-width: 36px; min-height: 36px;
-  padding: 4px 8px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  -webkit-tap-highlight-color: transparent;
+  background: none; border: none; color: #ccc; font-size: 20px;
+  cursor: pointer; padding: 4px 4px; -webkit-tap-highlight-color: transparent;
 }
-.cat-del-btn:active { background: #fca5a5; }
+.cat-del-btn:active { color: #e74c3c; }
 
 /* カテゴリー別インライングラフ */
 .cat-inline-chart {
@@ -262,7 +306,77 @@ header h1 { font-size: 17px; font-weight: 700; }
 .btn-record { background: #1e8a4a; color: white; width: 100%; padding: 13px; font-size: 14px; border-radius: 10px; }
 .btn-small  { background: #e8e8ee; color: #555; padding: 7px 12px; }
 
-/* 資産記録 月選択ナビ */
+/* 資産記録 日付選択カレンダー */
+.asset-dp-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; padding: 10px 12px;
+  background: #f0f4ff; border-radius: 10px;
+  border: 1.5px solid #dde5ff; margin-bottom: 10px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.asset-dp-toggle:active { background: #e4ebff; }
+.asset-dp-toggle-left { display: flex; align-items: center; gap: 8px; }
+.asset-dp-toggle-icon { font-size: 16px; }
+.asset-dp-toggle-lbl { font-size: 13px; font-weight: 700; color: #1a1a2e; }
+.asset-dp-toggle-date { font-size: 12px; color: #6366f1; font-weight: 600; }
+.asset-dp-toggle-arrow { font-size: 14px; color: #aaa; transition: transform 0.2s; }
+.asset-dp-toggle-arrow.open { transform: rotate(180deg); }
+
+.asset-dp-wrap {
+  border: 1.5px solid #e0e7ff;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: #f8f9ff;
+  display: none;
+}
+.asset-dp-wrap.open { display: block; }
+.asset-dp-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #e8eeff; padding: 8px 10px;
+  border-bottom: 1px solid #d8e0ff;
+}
+.asset-dp-nav span { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+.asset-dp-nav-btn {
+  background: none; border: 1px solid #c7d2fe; border-radius: 6px;
+  width: 28px; height: 28px; font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #6366f1; -webkit-tap-highlight-color: transparent;
+}
+.asset-dp-nav-btn:active { background: #dde4ff; }
+.asset-dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 6px;
+}
+.asset-dp-dow {
+  text-align: center; font-size: 10px; font-weight: 700;
+  color: #aaa; padding: 3px 0;
+}
+.asset-dp-dow.sun { color: #e74c3c; }
+.asset-dp-dow.sat { color: #3b82f6; }
+.asset-dp-day {
+  text-align: center; font-size: 12px; font-weight: 600;
+  border-radius: 6px; padding: 5px 2px; cursor: pointer;
+  color: #333; position: relative;
+  -webkit-tap-highlight-color: transparent;
+  border: 1.5px solid transparent;
+  line-height: 1.3;
+}
+.asset-dp-day.empty { visibility: hidden; cursor: default; }
+.asset-dp-day.today { border-color: #1a1a2e; }
+.asset-dp-day.sun { color: #e74c3c; }
+.asset-dp-day.sat { color: #3b82f6; }
+.asset-dp-day.has-rec { background: #dbeafe; }
+.asset-dp-day.selected { background: #1a1a2e !important; color: white !important; border-color: #1a1a2e; }
+.asset-dp-day:not(.empty):active { opacity: 0.7; }
+.asset-dp-dot {
+  display: block; width: 4px; height: 4px; border-radius: 50%;
+  background: #3b82f6; margin: 0 auto 1px;
+}
+.asset-dp-day.selected .asset-dp-dot { background: #7dd3fc; }
 
 .chart-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .chart-nav span { font-size: 14px; font-weight: 700; }
@@ -285,15 +399,21 @@ canvas#assetChart { width: 100%; display: block; }
 @media (max-width: 600px) {
   .main { padding: 8px; }
   .card { padding: 12px 8px; }
-  .cal-layout { gap: 2px; grid-template-columns: repeat(8, 1fr); }
+  .cal-grid { gap: 2px; grid-template-columns: repeat(7, 1fr); }
   .cal-cell { min-height: 42px; padding: 3px 2px; gap: 1px; }
   .cal-day { font-size: 10px; }
   .cal-holiday { font-size: 7px; }
   .cal-pnl-val { font-size: 8px; line-height: 1.1; white-space: nowrap; overflow: hidden; }
+  .cal-week-panel { width: 44px; border-radius: 8px; }
+  .cal-week-hdr { font-size: 9px; padding: 4px 2px; }
+  .cal-week-item { min-height: 56px; padding: 3px 2px; }
+  .cal-week-lbl { font-size: 7px; }
+  .cal-week-val { font-size: 9px; }
   .cal-input { font-size: 10px; padding: 1px 0; }
   .pnl-stat-val { font-size: 14px; }
   .asset-total-val { font-size: 22px; }
   .cat-name { min-width: 90px; font-size: 12px; }
+  .asset-dp-day { font-size: 11px; padding: 4px 1px; }
 }
 </style>
 </head>
@@ -310,6 +430,7 @@ canvas#assetChart { width: 100%; display: block; }
       <button class="pnl-modal-cancel" onclick="closePnlModal()">キャンセル</button>
       <button class="pnl-modal-ok" onclick="confirmPnlModal()">確定</button>
     </div>
+    <button class="pnl-modal-clear" onclick="clearPnlModal()">この日の収支を削除</button>
   </div>
 </div>
 
@@ -339,7 +460,10 @@ canvas#assetChart { width: 100%; display: block; }
         <h2 id="cal-title"></h2>
         <button class="cal-nav-btn" onclick="changeMonth(+1)">›</button>
       </div>
-      <div class="cal-layout" id="cal-grid"></div>
+      <div class="cal-layout">
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-week-panel" id="cal-week-panel"></div>
+      </div>
       <div class="pnl-stats">
         <div class="pnl-stat-box"><div class="pnl-stat-lbl">今月</div><div class="pnl-stat-val" id="s-monthly">¥0</div></div>
         <div class="pnl-stat-box"><div class="pnl-stat-lbl">今年</div><div class="pnl-stat-val" id="s-yearly">¥0</div></div>
@@ -362,7 +486,27 @@ canvas#assetChart { width: 100%; display: block; }
         <button class="btn btn-small" onclick="addCategory()">＋ 追加</button>
       </div>
 
-      <button class="btn btn-record" onclick="recordAsset()">💾 この月の総資産を記録</button>
+      <!-- 日付選択カレンダー（折りたたみ） -->
+      <div class="asset-dp-toggle" id="asset-dp-toggle" onclick="toggleAssetDp()">
+        <div class="asset-dp-toggle-left">
+          <span class="asset-dp-toggle-icon">📅</span>
+          <div>
+            <div class="asset-dp-toggle-lbl">記録する日付</div>
+            <div class="asset-dp-toggle-date" id="asset-dp-toggle-date">—</div>
+          </div>
+        </div>
+        <span class="asset-dp-toggle-arrow" id="asset-dp-toggle-arrow">▼</span>
+      </div>
+      <div class="asset-dp-wrap" id="asset-dp-wrap">
+        <div class="asset-dp-nav">
+          <button class="asset-dp-nav-btn" onclick="assetDpChangeMonth(-1)">‹</button>
+          <span id="asset-dp-title"></span>
+          <button class="asset-dp-nav-btn" onclick="assetDpChangeMonth(+1)">›</button>
+        </div>
+        <div class="asset-dp-grid" id="asset-dp-grid"></div>
+      </div>
+
+      <button class="btn btn-record" onclick="recordAsset()">💾 この日の総資産を記録</button>
     </div>
     <div class="card">
       <div class="chart-nav">
@@ -393,24 +537,63 @@ let state = {
   calMonth:  TODAY.getMonth(),
   categories:   ['現金・預金'],
   assetInput:   {},
-  assetRecords: {},  // { "YYYY-MM": {total, values} }
+  assetRecords: {},  // { "YYYY-MM-DD": {total, values} }
   chartYear:    TODAY.getFullYear(),
+  // 資産日付ピッカー
+  assetDpYear:  TODAY.getFullYear(),
+  assetDpMonth: TODAY.getMonth(),
+  assetSelDate: todayKey()
 };
 function load() {
   try {
     const s = localStorage.getItem('stk_cal_v3');
     if (s) {
       const loaded = JSON.parse(s);
-      // 旧フォーマット(array)→YYYY-MMマイグレーション
+      // 旧フォーマット(array)→新フォーマット(object)マイグレーション
       if (Array.isArray(loaded.assetRecords)) {
         const obj = {};
         loaded.assetRecords.forEach(r => {
-          const k = `${r.year}-${String(r.month).padStart(2,'0')}`;
+          const k = `${r.year}-${String(r.month).padStart(2,'0')}-${String(r.day||1).padStart(2,'0')}`;
           obj[k] = { total: r.total, values: r.values || {} };
         });
         loaded.assetRecords = obj;
-      } else {
-        // YYYY-MM-DD → YYYY-MM マイグレーション（同月内は後の日~K��8~K��i��8��Ȑ�6��7B�&���Ӱ��&�V7B�W�2���FVB�76WE&V6�&G2���Ғ�6�'B���f�$V6�������6��7B���F��W�����V�wF�������7V'7G&��r��r������&�����F��W�����FVB�76WE&V6�&G5��Ӱ�ғ����FVB�76WE&V6�&G2��&���Т7FFR�����7FFR������FVBӰ�Т�6F6��R��ЧЦgV�7F���6fR����G'����6�7F�&vR�6WD�FV҂w7F��6��c2r��4���7G&��v�g��7FFR����6F6��R��ЧЦgV�7F����V���&WGW&�����V���Ɨ4����~(	Br�|*Rr��F��&�V�B���F���6�U7G&��r�v�ԥr��ЦgV�7F���6�2���&WGW&����w�2s����v�Vrs�rs�ЦgV�7F���FFT�W������B��&WGW&�G����G�7G&��r�ҳ��E7F'B�"�sr���G�7G&��r�B��E7F'B�"�sr���ЦgV�7F���W64�F�2��&WGW&�7G&��r�2��&W�6R��b�r�rf��r��&W�6R����r�rf�C�r��&W�6R����r�rfwC�r��&W�6R��"�r�rgV�C�r��Р��������������������������������������������������������������Т��D ��������������������������������������������������������������ЦgV�7F���7v�F6�F"�F"���7FFR�7F�fUF"�F#��F�7V�V�B�VW'�6V�V7F�$�r�F"�'F�r��f�$V6���"ƒ���"�6�74Ɨ7B�F�vv�R�v7F�fRr������bgF#���v6�r������bgF#���v76WBr������F�7V�V�B�VW'�6V�V7F�$�r�F"��V�r��f�$V6�����6�74Ɨ7B�F�vv�R�v7F�fRr��C���w�V��r�F"������b�F#���v76WBr��&V�FW$6DƗ7B���&V�FW$6�'B���ЧР��������������������������������������������������������������Т��zY�izP��������������������������������������������������������������Ц6��7B holCache = {};
+      }
+      state = { ...state, ...loaded };
+      // DP の年月を選択済み日付に合わせる
+      if (state.assetSelDate) {
+        const parts = state.assetSelDate.split('-');
+        state.assetDpYear  = parseInt(parts[0]);
+        state.assetDpMonth = parseInt(parts[1]) - 1;
+      }
+    }
+  } catch(e) {}
+}
+function save() {
+  try { localStorage.setItem('stk_cal_v3', JSON.stringify(state)); } catch(e) {}
+}
+function yen(n) { return n==null||isNaN(n) ? '—' : '¥'+Math.round(n).toLocaleString('ja-JP'); }
+function pCls(n) { return n>0?'pos':n<0?'neg':''; }
+function dateKey(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ============================================================
+// TAB
+// ============================================================
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach((b,i) =>
+    b.classList.toggle('active', (i===0&&tab==='cal')||(i===1&&tab==='asset'))
+  );
+  document.querySelectorAll('.tab-panel').forEach(p =>
+    p.classList.toggle('active', p.id==='panel-'+tab)
+  );
+  if (tab==='asset') { renderCatList(); renderAssetDp(); renderChart(); }
+}
+
+// ============================================================
+// 祝日
+// ============================================================
+const _holCache = {};
 function getHolidays(year) {
   if (_holCache[year]) return _holCache[year];
   const h = {};
@@ -466,6 +649,12 @@ function pnlModalBgClick(e) {
 function confirmPnlModal() {
   if (_editKey === null) return;
   setDailyPnl(_editKey, document.getElementById('pnl-modal-input').value);
+  closePnlModal();
+}
+function clearPnlModal() {
+  if (_editKey === null) return;
+  delete state.dailyPnl[_editKey];
+  save(); renderCalendar();
   closePnlModal();
 }
 function setDailyPnl(key, rawVal) {
@@ -530,34 +719,131 @@ function renderCalendar() {
   for(let d=1;d<=daysInMonth;d++)cells.push(d);
   while(cells.length%7!==0)cells.push(null);
   const numWeeks=cells.length/7;
-  // 8列グリッド（曜日ヘッダー8列）
+  // カレンダーグリッド
   let html=DOW.map((d,i)=>`<div class="cal-dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('');
-  html+='<div class="cal-dow"></div>';
-  // 週ごとに7日セル + 空セル(8列目)を出力
-  for(let w=0;w<numWeeks;w++){
-    for(let c=0;c<7;c++){
-      const i=w*7+c,d=cells[i];
-      if(d===null){html+=`<div class="cal-cell empty"></div>`;continue;}
-      const key=dateKey(y,m,d),holiday=holidays[key];
-      const isToday=key===todayKey_,isSun=c===0,isSat=c===6;
-      const pnlVal=state.dailyPnl[key];
-      let cls='cal-cell';
-      if(isToday)cls+=' today';if(isSun)cls+=' sun';if(isSat)cls+=' sat';
-      if(holiday&&!isSun)cls+=' hol';
-      if(pnlVal!=null){cls+=pnlVal>0?' has-pos':pnlVal<0?' has-neg':'';}
-      const holLabel=holiday?`<div class="cal-holiday">${holiday}</div>`:'';
-      const pnlLabel=pnlVal!=null?`<div class="cal-pnl-val ${pCls(pnlVal)}">${shortYen(pnlVal)}</div>`:'';
-      html+=`<div class="${cls}" onclick="editDailyPnl('${key}','${y}\u5e74${m+1}\u6708${d}\u65e5')"><div class="cal-day">${d}</div>${holLabel}${pnlLabel}</div>`;
-    }
-    html+=`<div class="cal-cell empty"></div>`;
+  for(let i=0;i<cells.length;i++){
+    const d=cells[i];
+    if(d===null){html+=`<div class="cal-cell empty"></div>`;continue;}
+    const key=dateKey(y,m,d),holiday=holidays[key];
+    const isToday=key===todayKey_,col=i%7,isSun=col===0,isSat=col===6;
+    const pnlVal=state.dailyPnl[key];
+    let cls='cal-cell';
+    if(isToday)cls+=' today';if(isSun)cls+=' sun';if(isSat)cls+=' sat';
+    if(holiday&&!isSun)cls+=' hol';
+    if(pnlVal!=null){cls+=pnlVal>0?' has-pos':pnlVal<0?' has-neg':'';}
+    const holLabel=holiday?`<div class="cal-holiday">${holiday}</div>`:'';
+    const pnlLabel=pnlVal!=null?`<div class="cal-pnl-val ${pCls(pnlVal)}">${shortYen(pnlVal)}</div>`:'';
+    html+=`<div class="${cls}" onclick="editDailyPnl('${key}','${y}\u5e74${m+1}\u6708${d}\u65e5')"><div class="cal-day">${d}</div>${holLabel}${pnlLabel}</div>`;
   }
   document.getElementById('cal-grid').innerHTML=html;
+  // 週計パネル
+  let weekHtml='<div class="cal-week-hdr">週計</div>';
+  for(let w=0;w<numWeeks;w++){
+    let weekTotal=null;
+    for(let c=0;c<7;c++){
+      const d=cells[w*7+c];
+      if(d===null)continue;
+      const v=state.dailyPnl[dateKey(y,m,d)];
+      if(v!=null)weekTotal=(weekTotal||0)+v;
+    }
+    const vHtml=weekTotal!=null
+      ?`<div class="cal-week-val ${pCls(weekTotal)}">${shortYen(weekTotal)}</div>`
+      :`<div class="cal-week-val">—</div>`;
+    weekHtml+=`<div class="cal-week-item">${vHtml}</div>`;
+  }
+  document.getElementById('cal-week-panel').innerHTML=weekHtml;
   renderCalSummary();
+  setTimeout(syncWeekPanel, 50);
+}
+function syncWeekPanel() {
+  const grid=document.getElementById('cal-grid');
+  const panel=document.getElementById('cal-week-panel');
+  if(!grid||!panel)return;
+  const cells=[...grid.children];
+  if(cells.length<7)return;
+  // 曜日ヘッ㄀ー行の高さに週計ヘッダーを合わせる
+  const hdrH=Math.max(...cells.slice(0,7).map(c=>c.getBoundingClientRect().height));
+  const wHdr=panel.querySelector('.cal-week-hdr');
+  if(wHdr){wHdr.style.height=hdrH+'px';wHdr.style.boxSizing='border-box';}
+  // 各週行の高さに週計アイテムを合わせる
+  const wItems=[...panel.querySelectorAll('.cal-week-item')];
+  const dataCells=cells.slice(7);
+  wItems.forEach((item,i)=>{
+    const row=dataCells.slice(i*7,(i+1)*7);
+    if(!row.length)return;
+    const rowH=Math.max(...row.map(c=>c.getBoundingClientRect().height));
+    item.style.cssText=`height:${rowH}px;min-height:0;flex:0 0 ${rowH}px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-bottom:1px solid #dde3ff;`;
+  });
 }
 
 // ============================================================
-// 資産管理 - 月選択ナビ
+// 資産管理 - 日付ピッカー
 // ============================================================
+function assetDpChangeMonth(delta) {
+  state.assetDpMonth += delta;
+  if (state.assetDpMonth > 11) { state.assetDpMonth = 0; state.assetDpYear++; }
+  if (state.assetDpMonth < 0)  { state.assetDpMonth = 11; state.assetDpYear--; }
+  save(); renderAssetDp();
+}
+
+function assetDpSelect(key) {
+  state.assetSelDate = key;
+  // 選択したらカレンダーを閉じる
+  document.getElementById('asset-dp-wrap').classList.remove('open');
+  document.getElementById('asset-dp-toggle-arrow').classList.remove('open');
+  save(); renderAssetDp();
+}
+
+function toggleAssetDp() {
+  const wrap = document.getElementById('asset-dp-wrap');
+  const arrow = document.getElementById('asset-dp-toggle-arrow');
+  const isOpen = wrap.classList.toggle('open');
+  arrow.classList.toggle('open', isOpen);
+}
+
+function renderAssetDp() {
+  const y = state.assetDpYear, m = state.assetDpMonth;
+  const todayK = todayKey();
+  document.getElementById('asset-dp-title').textContent = `${y}\u5e74${m+1}\u6708`;
+
+  const DOW = ['日','月','火','水','木','金','土'];
+  const firstDow = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+
+  let html = DOW.map((d,i) =>
+    `<div class="asset-dp-dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`
+  ).join('');
+
+  for (let i = 0; i < firstDow; i++) {
+    html += `<div class="asset-dp-day empty"></div>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = dateKey(y, m, d);
+    const dow = (firstDow + d - 1) % 7;
+    const isToday = key === todayK;
+    const isSel   = key === state.assetSelDate;
+    const hasRec  = !!state.assetRecords[key];
+    let cls = 'asset-dp-day';
+    if (dow === 0) cls += ' sun';
+    if (dow === 6) cls += ' sat';
+    if (isToday)   cls += ' today';
+    if (hasRec)    cls += ' has-rec';
+    if (isSel)     cls += ' selected';
+    const dot = hasRec ? `<span class="asset-dp-dot"></span>` : '';
+    html += `<div class="${cls}" onclick="assetDpSelect('${key}')">${dot}${d}</div>`;
+  }
+  document.getElementById('asset-dp-grid').innerHTML = html;
+
+  // トグルボタンの日付表示を更新
+  const sel = state.assetSelDate;
+  if (sel) {
+    const parts = sel.split('-');
+    const ly = parseInt(parts[0]), lm = parseInt(parts[1]), ld = parseInt(parts[2]);
+    const rec = state.assetRecords[sel];
+    const recText = rec ? ` (記録済み: ${yen(rec.total)})` : '';
+    document.getElementById('asset-dp-toggle-date').textContent = `${ly}年${lm}月${ld}日${recText}`;
+  }
+}
 
 // ============================================================
 // 資産管理
@@ -577,8 +863,8 @@ function renderCatList(){
       <div class="cat-row">
         <button class="cat-name-btn" onclick="toggleCatChart('${esc}','${cid}')">${esc}</button>
         <input class="cat-input" type="text" inputmode="numeric" value="${val}" placeholder="0"
-          oninput="setAssetInput('${esc}',this.valu)"  onfocus="this.select()">
-        ${canDel?`<button class="cat-del-btn" onclick="deleteCategory(${idx})">🗑</button>`:''}
+          oninput="setAssetInput('${esc}',this.value)" onfocus="this.select()">
+        ${canDel?`<button class="cat-del-btn" onclick="deleteCategory(${idx})">×</button>`:''}
       </div>
       <div class="cat-inline-chart" id="${cid}">
         <div class="cat-inline-nav">
@@ -600,7 +886,7 @@ function setAssetInput(cat,rawVal){
 }
 function addCategory(){
   const inp=document.getElementById('new-cat-name'),name=inp.value.trim();if(!name)return;
-  if(state.categories.includes(name)){alert('同じ名前のカテゴリーが日にあります');return;}
+  if(state.categories.includes(name)){alert('同じ名前のカテゴリーが既にあります');return;}
   state.categories.push(name);inp.value='';save();renderCatList();
 }
 function deleteCategory(idx){
@@ -608,16 +894,17 @@ function deleteCategory(idx){
   state.categories.splice(idx,1);delete state.assetInput[cat];save();renderCatList();
 }
 function recordAsset(){
-  const y = TODAY.getFullYear(), m = TODAY.getMonth() + 1;
-  const key = `${y}-${String(m).padStart(2,'0')}`;
+  if (!state.assetSelDate) { alert('日付を選択してください'); return; }
   const total = calcAssetTotal();
   const values = {};
   state.categories.forEach(c => {
     values[c] = parseFloat(String(state.assetInput[c]||'0').replace(/,/g,'')) || 0;
   });
-  state.assetRecords[key] = { total, values };
-  save(); renderChart();
-  alert(`${y}年${m}月の資産 ${yen(total)} を記録しました`);
+  const parts = state.assetSelDate.split('-');
+  const ly = parseInt(parts[0]), lm = parseInt(parts[1]), ld = parseInt(parts[2]);
+  state.assetRecords[state.assetSelDate] = { total, values };
+  save(); renderAssetDp(); renderChart();
+  alert(`${ly}年${lm}月${ld}日の資産 ${yen(total)} を記録しました`);
 }
 
 // ============================================================
@@ -649,8 +936,12 @@ function renderCatInlineChart(cat, cid) {
   if (lbl) lbl.textContent = `${y}\u5e74`;
   const months = Array.from({length:12},(_,i)=>i+1);
   const vals = months.map(mo => {
-    const rec = state.assetRecords[`${y}-${String(mo).padStart(2,'0')}`];
-    return (rec && rec.values && rec.values[cat] != null) ? rec.values[cat] : null;
+    const prefix = `${y}-${String(mo).padStart(2,'0')}-`;
+    const keys = Object.keys(state.assetRecords).filter(k => k.startsWith(prefix));
+    if (!keys.length) return null;
+    keys.sort();
+    const rec = state.assetRecords[keys[keys.length-1]];
+    return (rec.values && rec.values[cat] != null) ? rec.values[cat] : null;
   });
   if (!vals.some(v => v !== null)) {
     canvas.style.display='none'; noData.style.display='block'; return;
@@ -695,9 +986,13 @@ function renderChart(){
   const y=state.chartYear;document.getElementById('chart-year-lbl').textContent=`${y}\u5e74`;
   const canvas=document.getElementById('assetChart'),noData=document.getElementById('chart-no-data');
   const months=Array.from({length:12},(_,i)=>i+1);
+  // 各月の記録の中から最新日を選ぶ
   const vals = months.map(mo => {
-    const rec = state.assetRecords[`${y}-${String(mo).padStart(2,'0')}`];
-    return rec ? rec.total : null;
+    const prefix = `${y}-${String(mo).padStart(2,'0')}-`;
+    const keys = Object.keys(state.assetRecords).filter(k => k.startsWith(prefix));
+    if (keys.length === 0) return null;
+    keys.sort();
+    return state.assetRecords[keys[keys.length-1]].total;
   });
   if(!vals.some(v=>v!==null)){canvas.style.display='none';noData.style.display='block';return;}
   canvas.style.display='block';noData.style.display='none';
@@ -726,12 +1021,6 @@ function renderChart(){
   });
 }
 function shortYen(v){return(v<0?'-':'')+'¥'+Math.round(Math.abs(v)).toLocaleString('ja-JP');}
-function wkYen(v){
-  const s=v<0?'-':'',a=Math.abs(Math.round(v));
-  if(a>=100000000)return s+'¥'+(a/100000000).toFixed(1).replace(/\.0$/,'')+'億';
-  if(a>=10000)    return s+'¥'+(a/10000).toFixed(1).replace(/\.0$/,'')+'万';
-  return s+'¥'+a.toLocaleString('ja-JP');
-}
 
 // ============================================================
 // PWA: Service Worker 登録（同じオリジンのsw.jsを使用）
