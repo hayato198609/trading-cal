@@ -772,6 +772,7 @@ function assetYearChange(delta){
   renderAssetMonthSel();
 }
 function renderAssetMonthSel(){
+  if(!state.assetSelYear)state.assetSelYear=TODAY.getFullYear();
   const lbl=document.getElementById('asset-sel-year-lbl');
   if(lbl)lbl.textContent=state.assetSelYear+'年';
   for(let m=1;m<=12;m++){
