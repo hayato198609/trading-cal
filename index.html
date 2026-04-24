@@ -875,8 +875,8 @@ function renderChart(){
   const months=Array.from({length:12},(_,i)=>i+1);
   // 各月の記録の中から最新日を選ぶ
   const vals = months.map(mo => {
-    const prefix = `${y}-${String(mo).padStart(2,'0')}-`;
-    const keys = Object.keys(state.assetRecords).filter(k => k.startsWith(prefix));
+    const prefix = `${y}-${String(mo).padStart(2,'0')}`;
+    const keys = Object.keys(state.assetRecords).filter(k => k===prefix||k.startsWith(prefix+'-'));
     if (keys.length === 0) return null;
     keys.sort();
     return state.assetRecords[keys[keys.length-1]].total;
