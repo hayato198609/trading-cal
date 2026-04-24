@@ -5,20 +5,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>取引収支・資産管理</title>
+<title>åå¼åæ¯ã»è³ç£ç®¡ç</title>
 
-<!-- PWA マニフェスト（静的ファイルで確実に認識させる） -->
+<!-- PWA ãããã§ã¹ãï¼éçãã¡ã¤ã«ã§ç¢ºå®ã«èªè­ãããï¼ -->
 <link rel="manifest" href="./manifest.json">
 
-<!-- テーマカラー -->
+<!-- ãã¼ãã«ã©ã¼ -->
 <meta name="theme-color" content="#1a1a2e">
-<meta name="description" content="株式取引の収支カレンダーと資産管理アプリ">
+<meta name="description" content="æ ªå¼åå¼ã®åæ¯ã«ã¬ã³ãã¼ã¨è³ç£ç®¡çã¢ããª">
 
-<!-- iOS Safari PWA設定 -->
+<!-- iOS Safari PWAè¨­å® -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="取引収支">
-<!-- iOS用アイコン（SVG） -->
+<meta name="apple-mobile-web-app-title" content="åå¼åæ¯">
+<!-- iOSç¨ã¢ã¤ã³ã³ï¼SVGï¼ -->
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231a1a2e'/%3E%3Cpolyline points='28,125 68,85 108,105 148,54 168,67' fill='none' stroke='%234fc3f7' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='125' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='68' cy='85' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='108' cy='105' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='148' cy='54' r='7' fill='%234fc3f7'/%3E%3Ccircle cx='168' cy='67' r='7' fill='%234fc3f7'/%3E%3C/svg%3E">
 
 <!-- Android Chrome -->
@@ -113,7 +113,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .cal-dow.sun { color: #e74c3c; }
 .cal-dow.sat { color: #3b82f6; }
 
-/* 週計 別枠パネル */
+/* é±è¨ å¥æ ããã« */
 .cal-week-panel {
   width: 58px;
   flex-shrink: 0;
@@ -172,7 +172,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .cal-pnl-val.neg { color: #c0392b; }
 .cal-cell:not(.empty) { cursor: pointer; }
 
-/* 入力モーダル */
+/* å¥åã¢ã¼ãã« */
 .pnl-modal {
   display: none; position: fixed; inset: 0; z-index: 200;
   background: rgba(0,0,0,0.45); align-items: center; justify-content: center;
@@ -216,7 +216,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .pnl-stat-val.pos { color: #1e8a4a; }
 .pnl-stat-val.neg { color: #c0392b; }
 
-/* 月別収支グリッド */
+/* æå¥åæ¯ã°ãªãã */
 .monthly-grid-inner {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -279,7 +279,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 }
 .cat-del-btn:active { background: #fca5a5; }
 
-/* カテゴリー別インライングラフ */
+/* ã«ãã´ãªã¼å¥ã¤ã³ã©ã¤ã³ã°ã©ã */
 .cat-inline-chart {
   display: none;
   background: #f8f8ff;
@@ -325,7 +325,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .chart-nav span { font-size: 14px; font-weight: 700; }
 canvas#assetChart { width: 100%; display: block; }
 
-/* PWAインストールバナー */
+/* PWAã¤ã³ã¹ãã¼ã«ããã¼ */
 #install-banner {
   display: none; background: #1e8a4a; color: white;
   padding: 12px 16px; font-size: 13px; font-weight: 600;
@@ -364,93 +364,93 @@ canvas#assetChart { width: 100%; display: block; }
 </head>
 <body>
 
-<!-- 損益入力モーダル -->
+<!-- æçå¥åã¢ã¼ãã« -->
 <div class="pnl-modal" id="pnl-modal" onclick="pnlModalBgClick(event)">
   <div class="pnl-modal-box">
     <div class="pnl-modal-title" id="pnl-modal-title"></div>
     <input class="pnl-modal-input" id="pnl-modal-input" type="text" inputmode="decimal"
-      placeholder="例: 5000 / -3000"
+      placeholder="ä¾: 5000 / -3000"
       onkeydown="if(event.key==='Enter')confirmPnlModal()">
     <div class="pnl-modal-btns">
-      <button class="pnl-modal-cancel" onclick="closePnlModal()">キャンセル</button>
-      <button class="pnl-modal-ok" onclick="confirmPnlModal()">確定</button>
+      <button class="pnl-modal-cancel" onclick="closePnlModal()">ã­ã£ã³ã»ã«</button>
+      <button class="pnl-modal-ok" onclick="confirmPnlModal()">ç¢ºå®</button>
     </div>
-    <button class="pnl-modal-clear" onclick="clearPnlModal()">この日の収支を削除</button>
+    <button class="pnl-modal-clear" onclick="clearPnlModal()">ãã®æ¥ã®åæ¯ãåé¤</button>
   </div>
 </div>
 
 <div id="install-banner">
-  <span>📱 ホーム画面に追加できます</span>
-  <button id="install-btn">インストール</button>
-  <button class="close-btn" onclick="document.getElementById('install-banner').style.display='none'">×</button>
+  <span>ð± ãã¼ã ç»é¢ã«è¿½å ã§ãã¾ã</span>
+  <button id="install-btn">ã¤ã³ã¹ãã¼ã«</button>
+  <button class="close-btn" onclick="document.getElementById('install-banner').style.display='none'">Ã</button>
 </div>
 
 <header>
-  <span style="font-size:22px">💹</span>
-  <h1>取引収支・資産管理</h1>
+  <span style="font-size:22px">ð¹</span>
+  <h1>åå¼åæ¯ã»è³ç£ç®¡ç</h1>
 </header>
 
 <div class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('cal')">取引収支</button>
-  <button class="tab-btn"        onclick="switchTab('asset')">資産管理</button>
+  <button class="tab-btn active" onclick="switchTab('cal')">åå¼åæ¯</button>
+  <button class="tab-btn"        onclick="switchTab('asset')">è³ç£ç®¡ç</button>
 </div>
 
 <div class="main">
 
-  <!-- カレンダータブ -->
+  <!-- ã«ã¬ã³ãã¼ã¿ã -->
   <div class="tab-panel active" id="panel-cal">
     <div class="card">
       <div class="cal-nav">
-        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">â¹</button>
         <h2 id="cal-title"></h2>
-        <button class="cal-nav-btn" onclick="changeMonth(+1)">›</button>
+        <button class="cal-nav-btn" onclick="changeMonth(+1)">âº</button>
       </div>
       <div class="cal-layout">
         <div class="cal-grid" id="cal-grid"></div>
         <div class="cal-week-panel" id="cal-week-panel"></div>
       </div>
       <div class="pnl-stats">
-        <div class="pnl-stat-box"><div class="pnl-stat-lbl">今月</div><div class="pnl-stat-val" id="s-monthly">¥0</div></div>
-        <div class="pnl-stat-box"><div class="pnl-stat-lbl">今年</div><div class="pnl-stat-val" id="s-yearly">¥0</div></div>
+        <div class="pnl-stat-box"><div class="pnl-stat-lbl">ä»æ</div><div class="pnl-stat-val" id="s-monthly">Â¥0</div></div>
+        <div class="pnl-stat-box"><div class="pnl-stat-lbl">ä»å¹´</div><div class="pnl-stat-val" id="s-yearly">Â¥0</div></div>
       </div>
       <div id="monthly-grid"></div>
     </div>
   </div>
 
-  <!-- 資産管理タブ -->
+  <!-- è³ç£ç®¡çã¿ã -->
   <div class="tab-panel" id="panel-asset">
     <div class="asset-total-box">
-      <div class="asset-total-lbl">現在の入力合計</div>
-      <div class="asset-total-val" id="asset-total-disp">¥0</div>
+      <div class="asset-total-lbl">ç¾å¨ã®å¥ååè¨</div>
+      <div class="asset-total-val" id="asset-total-disp">Â¥0</div>
     </div>
     <div class="card">
-      <div class="section-title">💰 カテゴリー別入力</div>
+      <div class="section-title">ð° ã«ãã´ãªã¼å¥å¥å</div>
       <div class="cat-list" id="cat-list"></div>
       <div class="add-cat-row">
-        <input class="add-cat-input" id="new-cat-name" type="text" placeholder="新しいカテゴリー名を入力">
-        <button class="btn btn-small" onclick="addCategory()">＋ 追加</button>
+        <input class="add-cat-input" id="new-cat-name" type="text" placeholder="æ°ããã«ãã´ãªã¼åãå¥å">
+        <button class="btn btn-small" onclick="addCategory()">ï¼ è¿½å </button>
       </div>
 
       <div class="month-sel-wrap">
   <div class="month-sel-year">
-    <button onclick="assetYearChange(-1)">‹</button>
+    <button onclick="assetYearChange(-1)">â¹</button>
     <span id="asset-sel-year-lbl"></span>
-    <button onclick="assetYearChange(+1)">›</button>
+    <button onclick="assetYearChange(+1)">âº</button>
   </div>
   <div class="month-sel-grid">
-    <button class="month-btn" id="mbtn-1" onclick="selectAssetMonth(1)">1月</button><button class="month-btn" id="mbtn-2" onclick="selectAssetMonth(2)">2月</button><button class="month-btn" id="mbtn-3" onclick="selectAssetMonth(3)">3月</button><button class="month-btn" id="mbtn-4" onclick="selectAssetMonth(4)">4月</button><button class="month-btn" id="mbtn-5" onclick="selectAssetMonth(5)">5月</button><button class="month-btn" id="mbtn-6" onclick="selectAssetMonth(6)">6月</button><button class="month-btn" id="mbtn-7" onclick="selectAssetMonth(7)">7月</button><button class="month-btn" id="mbtn-8" onclick="selectAssetMonth(8)">8月</button><button class="month-btn" id="mbtn-9" onclick="selectAssetMonth(9)">9月</button><button class="month-btn" id="mbtn-10" onclick="selectAssetMonth(10)">10月</button><button class="month-btn" id="mbtn-11" onclick="selectAssetMonth(11)">11月</button><button class="month-btn" id="mbtn-12" onclick="selectAssetMonth(12)">12月</button>
+    <button class="month-btn" id="mbtn-1" onclick="selectAssetMonth(1)">1æ</button><button class="month-btn" id="mbtn-2" onclick="selectAssetMonth(2)">2æ</button><button class="month-btn" id="mbtn-3" onclick="selectAssetMonth(3)">3æ</button><button class="month-btn" id="mbtn-4" onclick="selectAssetMonth(4)">4æ</button><button class="month-btn" id="mbtn-5" onclick="selectAssetMonth(5)">5æ</button><button class="month-btn" id="mbtn-6" onclick="selectAssetMonth(6)">6æ</button><button class="month-btn" id="mbtn-7" onclick="selectAssetMonth(7)">7æ</button><button class="month-btn" id="mbtn-8" onclick="selectAssetMonth(8)">8æ</button><button class="month-btn" id="mbtn-9" onclick="selectAssetMonth(9)">9æ</button><button class="month-btn" id="mbtn-10" onclick="selectAssetMonth(10)">10æ</button><button class="month-btn" id="mbtn-11" onclick="selectAssetMonth(11)">11æ</button><button class="month-btn" id="mbtn-12" onclick="selectAssetMonth(12)">12æ</button>
   </div>
 </div>
-<button class="btn btn-record" onclick="recordAsset()">💾 この月の総資産を記録</button>
+<button class="btn btn-record" onclick="recordAsset()">ð¾ ãã®æã®ç·è³ç£ãè¨é²</button>
     </div>
     <div class="card">
       <div class="chart-nav">
-        <button class="cal-nav-btn" onclick="changeChartYear(-1)">‹</button>
+        <button class="cal-nav-btn" onclick="changeChartYear(-1)">â¹</button>
         <span id="chart-year-lbl"></span>
-        <button class="cal-nav-btn" onclick="changeChartYear(+1)">›</button>
+        <button class="cal-nav-btn" onclick="changeChartYear(+1)">âº</button>
       </div>
       <canvas id="assetChart" height="200"></canvas>
-      <div id="chart-no-data" style="text-align:center;color:#ccc;font-size:13px;padding:30px 0;display:none">記録がありません</div>
+      <div id="chart-no-data" style="text-align:center;color:#ccc;font-size:13px;padding:30px 0;display:none">è¨é²ãããã¾ãã</div>
     </div>
   </div>
 
@@ -470,7 +470,7 @@ let state = {
   dailyPnl: {},
   calYear:   TODAY.getFullYear(),
   calMonth:  TODAY.getMonth(),
-  categories:   ['現金・預金'],
+  categories:   ['ç¾éã»é é'],
   assetInput:   {},
   assetRecords: {},  // { "YYYY-MM-DD": {total, values} }
   chartYear:    TODAY.getFullYear(),
@@ -480,7 +480,7 @@ function load() {
     const s = localStorage.getItem('stk_cal_v3');
     if (s) {
       const loaded = JSON.parse(s);
-      // 旧フォーマット(array)→新フォーマット(object)マイグレーション
+      // æ§ãã©ã¼ããã(array)âæ°ãã©ã¼ããã(object)ãã¤ã°ã¬ã¼ã·ã§ã³
       if (Array.isArray(loaded.assetRecords)) {
         const obj = {};
         loaded.assetRecords.forEach(r => {
@@ -496,7 +496,7 @@ function load() {
 function save() {
   try { localStorage.setItem('stk_cal_v3', JSON.stringify(state)); } catch(e) {}
 }
-function yen(n) { return n==null||isNaN(n) ? '—' : '¥'+Math.round(n).toLocaleString('ja-JP'); }
+function yen(n) { return n==null||isNaN(n) ? 'â' : 'Â¥'+Math.round(n).toLocaleString('ja-JP'); }
 function pCls(n) { return n>0?'pos':n<0?'neg':''; }
 function dateKey(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -515,7 +515,7 @@ function switchTab(tab) {
 }
 
 // ============================================================
-// 祝日
+// ç¥æ¥
 // ============================================================
 const _holCache = {};
 function getHolidays(year) {
@@ -526,26 +526,26 @@ function getHolidays(year) {
     const d=new Date(year,mo-1,1); let cnt=0;
     for(let i=0;i<31;i++,d.setDate(d.getDate()+1)){if(d.getMonth()!==mo-1)break;if(d.getDay()===1&&++cnt===n)return d.getDate();}
   };
-  add(1,1,'元日');add(2,11,'建国記念の日');add(2,23,'天皇誕生日');
-  add(4,29,'昭和の日');add(5,3,'憲法記念日');add(5,4,'みどりの日');add(5,5,'こどもの日');
-  add(8,11,'山の日');add(11,3,'文化の日');add(11,23,'勤労感謝の日');
-  add(1,nthMon(1,2),'成人の日');add(7,nthMon(7,3),'海の日');
-  add(9,nthMon(9,3),'敬老の日');add(10,nthMon(10,2),'スポーツの日');
+  add(1,1,'åæ¥');add(2,11,'å»ºå½è¨å¿µã®æ¥');add(2,23,'å¤©çèªçæ¥');
+  add(4,29,'æ­åã®æ¥');add(5,3,'æ²æ³è¨å¿µæ¥');add(5,4,'ã¿ã©ãã®æ¥');add(5,5,'ãã©ãã®æ¥');
+  add(8,11,'å±±ã®æ¥');add(11,3,'æåã®æ¥');add(11,23,'å¤å´æè¬ã®æ¥');
+  add(1,nthMon(1,2),'æäººã®æ¥');add(7,nthMon(7,3),'æµ·ã®æ¥');
+  add(9,nthMon(9,3),'æ¬èã®æ¥');add(10,nthMon(10,2),'ã¹ãã¼ãã®æ¥');
   const yy=year-1980;
-  add(3,Math.floor(20.8431+0.242194*yy-Math.floor(yy/4)),'春分の日');
-  add(9,Math.floor(23.2488+0.242194*yy-Math.floor(yy/4)),'秋分の日');
+  add(3,Math.floor(20.8431+0.242194*yy-Math.floor(yy/4)),'æ¥åã®æ¥');
+  add(9,Math.floor(23.2488+0.242194*yy-Math.floor(yy/4)),'ç§åã®æ¥');
   for(const key of [...Object.keys(h)]){
     const d=new Date(key+'T12:00:00');
     if(d.getDay()===0){let sub=new Date(d);sub.setDate(d.getDate()+1);
       while(true){const sk=`${sub.getFullYear()}-${String(sub.getMonth()+1).padStart(2,'0')}-${String(sub.getDate()).padStart(2,'0')}`;
-        if(!h[sk]){h[sk]='振替休日';break;}sub.setDate(sub.getDate()+1);}
+        if(!h[sk]){h[sk]='æ¯æ¿ä¼æ¥';break;}sub.setDate(sub.getDate()+1);}
     }
   }
   _holCache[year]=h; return h;
 }
 
 // ============================================================
-// カレンダー（取引収支）
+// ã«ã¬ã³ãã¼ï¼åå¼åæ¯ï¼
 // ============================================================
 function changeMonth(delta) {
   state.calMonth+=delta;
@@ -582,7 +582,7 @@ function clearPnlModal() {
   closePnlModal();
 }
 function setDailyPnl(key, rawVal) {
-  const val = rawVal.replace(/[,，]/g,'').replace(/[−ー]/g,'-').trim();
+  const val = rawVal.replace(/[,ï¼]/g,'').replace(/[âã¼]/g,'-').trim();
   const n = parseFloat(val);
   if (val === '' || val === '-') delete state.dailyPnl[key];
   else if (!isNaN(n)) state.dailyPnl[key] = n;
@@ -625,8 +625,8 @@ function renderMonthlyGrid() {
     if (val != null) cls += val > 0 ? ' has-pos' : val < 0 ? ' has-neg' : '';
     const valHtml = val != null
       ? `<div class="monthly-cell-val ${pCls(val)}">${(val>=0?'+':'')+yen(val)}</div>`
-      : `<div class="monthly-cell-val">—</div>`;
-    html += `<div class="${cls}"><div class="monthly-cell-lbl">${mo}月</div>${valHtml}</div>`;
+      : `<div class="monthly-cell-val">â</div>`;
+    html += `<div class="${cls}"><div class="monthly-cell-lbl">${mo}æ</div>${valHtml}</div>`;
   }
   html += '</div>';
   container.innerHTML = html;
@@ -636,14 +636,14 @@ function renderCalendar() {
   const todayKey_=dateKey(today.getFullYear(),today.getMonth(),today.getDate());
   const holidays=getHolidays(y);
   document.getElementById('cal-title').textContent=`${y}\u5e74${m+1}\u6708`;
-  const DOW=['日','月','火','水','木','金','土'];
+  const DOW=['æ¥','æ','ç«','æ°´','æ¨','é','å'];
   const firstDow=new Date(y,m,1).getDay(),daysInMonth=new Date(y,m+1,0).getDate();
   const cells=[];
   for(let i=0;i<firstDow;i++)cells.push(null);
   for(let d=1;d<=daysInMonth;d++)cells.push(d);
   while(cells.length%7!==0)cells.push(null);
   const numWeeks=cells.length/7;
-  // カレンダーグリッド
+  // ã«ã¬ã³ãã¼ã°ãªãã
   let html=DOW.map((d,i)=>`<div class="cal-dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('');
   for(let i=0;i<cells.length;i++){
     const d=cells[i];
@@ -660,8 +660,8 @@ function renderCalendar() {
     html+=`<div class="${cls}" onclick="editDailyPnl('${key}','${y}\u5e74${m+1}\u6708${d}\u65e5')"><div class="cal-day">${d}</div>${holLabel}${pnlLabel}</div>`;
   }
   document.getElementById('cal-grid').innerHTML=html;
-  // 週計パネル
-  let weekHtml='<div class="cal-week-hdr">週計</div>';
+  // é±è¨ããã«
+  let weekHtml='<div class="cal-week-hdr">é±è¨</div>';
   for(let w=0;w<numWeeks;w++){
     let weekTotal=null;
     for(let c=0;c<7;c++){
@@ -672,7 +672,7 @@ function renderCalendar() {
     }
     const vHtml=weekTotal!=null
       ?`<div class="cal-week-val ${pCls(weekTotal)}">${shortYen(weekTotal)}</div>`
-      :`<div class="cal-week-val">—</div>`;
+      :`<div class="cal-week-val">â</div>`;
     weekHtml+=`<div class="cal-week-item">${vHtml}</div>`;
   }
   document.getElementById('cal-week-panel').innerHTML=weekHtml;
@@ -685,11 +685,11 @@ function syncWeekPanel() {
   if(!grid||!panel)return;
   const cells=[...grid.children];
   if(cells.length<7)return;
-  // 曜日ヘッ㄀ー行の高さに週計ヘッダーを合わせる
+  // ææ¥ãããã¼è¡ã®é«ãã«é±è¨ãããã¼ãåããã
   const hdrH=Math.max(...cells.slice(0,7).map(c=>c.getBoundingClientRect().height));
   const wHdr=panel.querySelector('.cal-week-hdr');
   if(wHdr){wHdr.style.height=hdrH+'px';wHdr.style.boxSizing='border-box';}
-  // 各週行の高さに週計アイテムを合わせる
+  // åé±è¡ã®é«ãã«é±è¨ã¢ã¤ãã ãåããã
   const wItems=[...panel.querySelectorAll('.cal-week-item')];
   const dataCells=cells.slice(7);
   wItems.forEach((item,i)=>{
@@ -701,9 +701,9 @@ function syncWeekPanel() {
 }
 
 // ============================================================
-// 資産管理 - 日付ピッカー
+// è³ç£ç®¡ç - æ¥ä»ããã«ã¼
 // ============================================================
-// 資産管理
+// è³ç£ç®¡ç
 // ============================================================
 function calcAssetTotal(){return state.categories.reduce((s,c)=>s+(parseFloat(String(state.assetInput[c]||'0').replace(/,/g,''))||0),0);}
 function updateAssetTotal(){const el=document.getElementById('asset-total-disp');if(el)el.textContent=yen(calcAssetTotal());}
@@ -721,33 +721,33 @@ function renderCatList(){
         <button class="cat-name-btn" onclick="toggleCatChart('${esc}','${cid}')">${esc}</button>
         <input class="cat-input" type="text" inputmode="numeric" value="${val}" placeholder="0"
           oninput="setAssetInput('${esc}',this.value)" onfocus="this.select()">
-        ${canDel?`<button class="cat-del-btn" onclick="deleteCategory(${idx})">×</button>`:''}
+        ${canDel?`<button class="cat-del-btn" onclick="deleteCategory(${idx})">Ã</button>`:''}
       </div>
-      <div class="cat-inline-chart open" id="${cid}">
+      <div class="cat-inline-chart" id="${cid}">
         <div class="cat-inline-nav">
-          <button class="cat-inline-nav-btn" onclick="catInlineYearChange('${esc}','${cid}',-1)">‹</button>
+          <button class="cat-inline-nav-btn" onclick="catInlineYearChange('${esc}','${cid}',-1)">â¹</button>
           <span id="${cid}-lbl"></span>
-          <button class="cat-inline-nav-btn" onclick="catInlineYearChange('${esc}','${cid}',+1)">›</button>
+          <button class="cat-inline-nav-btn" onclick="catInlineYearChange('${esc}','${cid}',+1)">âº</button>
         </div>
         <canvas id="${cid}-canvas" height="160" style="width:100%;display:block"></canvas>
-        <div id="${cid}-nodata" class="cat-inline-no-data" style="display:none">記録がありません</div>
+        <div id="${cid}-nodata" class="cat-inline-no-data" style="display:none">è¨é²ãããã¾ãã</div>
       </div>
     </div>`;
   }).join('');
   updateAssetTotal();
 }
 function setAssetInput(cat,rawVal){
-  const v=rawVal.replace(/[,，]/g,'').replace(/[−ー]/g,'-').trim(),n=parseFloat(v);
+  const v=rawVal.replace(/[,ï¼]/g,'').replace(/[âã¼]/g,'-').trim(),n=parseFloat(v);
   if(v===''||isNaN(n))delete state.assetInput[cat];else state.assetInput[cat]=n;
   save();updateAssetTotal();
 }
 function addCategory(){
   const inp=document.getElementById('new-cat-name'),name=inp.value.trim();if(!name)return;
-  if(state.categories.includes(name)){alert('同じ名前のカテゴリーが既にあります');return;}
+  if(state.categories.includes(name)){alert('åãååã®ã«ãã´ãªã¼ãæ¢ã«ããã¾ã');return;}
   state.categories.push(name);inp.value='';save();renderCatList();
 }
 function deleteCategory(idx){
-  const cat=state.categories[idx];if(!confirm(`「${cat}」を削除しますか？`))return;
+  const cat=state.categories[idx];if(!confirm(`ã${cat}ããåé¤ãã¾ããï¼`))return;
   state.categories.splice(idx,1);delete state.assetInput[cat];save();renderCatList();
 }
 function recordAsset(){
@@ -760,7 +760,7 @@ function recordAsset(){
   });
   state.assetRecords[key]={total,values};
   save();renderChart();
-  alert(`${y}年${m}月の資産 ${yen(total)} を記録しました`);
+  alert(`${y}å¹´${m}æã®è³ç£ ${yen(total)} ãè¨é²ãã¾ãã`);
 }
 
 function selectAssetMonth(m){
@@ -773,7 +773,7 @@ function assetYearChange(delta){
 }
 function renderAssetMonthSel(){
   const lbl=document.getElementById('asset-sel-year-lbl');
-  if(lbl)lbl.textContent=state.assetSelYear+'年';
+  if(lbl)lbl.textContent=state.assetSelYear+'å¹´';
   for(let m=1;m<=12;m++){
     const btn=document.getElementById('mbtn-'+m);
     if(btn)btn.className='month-btn'+(m===state.assetSelMonth?' sel':'');
@@ -781,7 +781,7 @@ function renderAssetMonthSel(){
 }
 
 // ============================================================
-// カテゴリー別インライングラフ
+// ã«ãã´ãªã¼å¥ã¤ã³ã©ã¤ã³ã°ã©ã
 // ============================================================
 const _catYears = {}; // cat -> year
 
@@ -852,14 +852,14 @@ function renderCatInlineChart(cat, cid) {
 }
 
 // ============================================================
-// グラフ（月次 - 各月の最終記録を使用）
+// ã°ã©ãï¼ææ¬¡ - åæã®æçµè¨é²ãä½¿ç¨ï¼
 // ============================================================
 function changeChartYear(delta){state.chartYear+=delta;save();renderChart();}
 function renderChart(){
   const y=state.chartYear;document.getElementById('chart-year-lbl').textContent=`${y}\u5e74`;
   const canvas=document.getElementById('assetChart'),noData=document.getElementById('chart-no-data');
   const months=Array.from({length:12},(_,i)=>i+1);
-  // 各月の記録の中から最新日を選ぶ
+  // åæã®è¨é²ã®ä¸­ããææ°æ¥ãé¸ã¶
   const vals = months.map(mo => {
     const prefix = `${y}-${String(mo).padStart(2,'0')}-`;
     const keys = Object.keys(state.assetRecords).filter(k => k.startsWith(prefix));
@@ -893,10 +893,10 @@ function renderChart(){
     ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
   });
 }
-function shortYen(v){return(v<0?'-':'')+'¥'+Math.round(Math.abs(v)).toLocaleString('ja-JP');}
+function shortYen(v){return(v<0?'-':'')+'Â¥'+Math.round(Math.abs(v)).toLocaleString('ja-JP');}
 
 // ============================================================
-// PWA: Service Worker 登録（同じオリジンのsw.jsを使用）
+// PWA: Service Worker ç»é²ï¼åããªãªã¸ã³ã®sw.jsãä½¿ç¨ï¼
 // ============================================================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -907,7 +907,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ============================================================
-// PWA: インストールバナー（Android Chrome）
+// PWA: ã¤ã³ã¹ãã¼ã«ããã¼ï¼Android Chromeï¼
 // ============================================================
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
