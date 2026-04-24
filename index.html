@@ -747,13 +747,13 @@ function renderCalendar() {
       if(v!=null)weekTotal=(weekTotal||0)+v;
     }
     const vHtml=weekTotal!=null
-      ?`<div class="cal-week-val ${pCls(weekTotal)}">${shortyen(weekTotal)}</div>`
+      ?`<div class="cal-week-val ${pCls(weekTotal)}">${shortYen(weekTotal)}</div>`
       :`<div class="cal-week-val">—</div>`;
     weekHtml+=`<div class="cal-week-item">${vHtml}</div>`;
   }
   document.getElementById('cal-week-panel').innerHTML=weekHtml;
   renderCalSummary();
-  setTimeout(syncWeekPanel, 0);
+  setTimeout(syncWeekPanel, 50);
 }
 function syncWeekPanel() {
   const grid=document.getElementById('cal-grid');
@@ -761,7 +761,7 @@ function syncWeekPanel() {
   if(!grid||!panel)return;
   const cells=[...grid.children];
   if(cells.length<7)return;
-  // 曜日ヘッダー行の高さに週計ヘッダーを合わせる
+  // 曜日ヘッ㄀ー行の高さに週計ヘッダーを合わせる
   const hdrH=Math.max(...cells.slice(0,7).map(c=>c.getBoundingClientRect().height));
   const wHdr=panel.querySelector('.cal-week-hdr');
   if(wHdr){wHdr.style.height=hdrH+'px';wHdr.style.boxSizing='border-box';}
@@ -1017,7 +1017,7 @@ function renderChart(){
   pts.forEach(([x,y,v])=>{
     ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#4fc3f7';ctx.fill();
     ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-seref';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
+    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
   });
 }
 function shortYen(v){return(v<0?'-':'')+'¥'+Math.round(Math.abs(v)).toLocaleString('ja-JP');}
