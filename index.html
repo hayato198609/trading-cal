@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+<!DOCTYPE html
+  assetSelYear: TODAY.getFullYear(),
+  assetSelMonth: TODAY.getMonth() + 1,>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -312,6 +314,13 @@ header h1 { font-size: 17px; font-weight: 700; }
 .btn-record { background: #1e8a4a; color: white; width: 100%; padding: 13px; font-size: 14px; border-radius: 10px; }
 .btn-small  { background: #e8e8ee; color: #555; padding: 7px 12px; }
 
+.month-sel-wrap{margin-bottom:10px;}
+.month-sel-year{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px;}
+.month-sel-year button{background:none;border:none;font-size:18px;cursor:pointer;color:#555;padding:0 4px;}
+.month-sel-year span{font-size:14px;font-weight:700;color:#333;}
+.month-sel-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:10px;}
+.month-btn{border:1.5px solid #ccc;background:#f8f8f8;border-radius:6px;padding:5px 0;font-size:13px;cursor:pointer;text-align:center;}
+.month-btn.sel{background:#4fc3f7;color:#fff;border-color:#0288d1;font-weight:700;}
 .chart-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .chart-nav span { font-size: 14px; font-weight: 700; }
 canvas#assetChart { width: 100%; display: block; }
@@ -422,7 +431,17 @@ canvas#assetChart { width: 100%; display: block; }
         <button class="btn btn-small" onclick="addCategory()">＋ 追加</button>
       </div>
 
-      <button class="btn btn-record" onclick="recordAsset()">💾 この月の総資産を記録</button>
+      <div class="month-sel-wrap">
+  <div class="month-sel-year">
+    <button onclick="assetYearChange(-1)">‹</button>
+    <span id="asset-sel-year-lbl"></span>
+    <button onclick="assetYearChange(+1)">›</button>
+  </div>
+  <div class="month-sel-grid">
+    <button class="month-btn" id="mbtn-1" onclick="selectAssetMonth(1)">1月</button><button class="month-btn" id="mbtn-2" onclick="selectAssetMonth(2)">2月</button><button class="month-btn" id="mbtn-3" onclick="selectAssetMonth(3)">3月</button><button class="month-btn" id="mbtn-4" onclick="selectAssetMonth(4)">4月</button><button class="month-btn" id="mbtn-5" onclick="selectAssetMonth(5)">5月</button><button class="month-btn" id="mbtn-6" onclick="selectAssetMonth(6)">6月</button><button class="month-btn" id="mbtn-7" onclick="selectAssetMonth(7)">7月</button><button class="month-btn" id="mbtn-8" onclick="selectAssetMonth(8)">8月</button><button class="month-btn" id="mbtn-9" onclick="selectAssetMonth(9)">9月</button><button class="month-btn" id="mbtn-10" onclick="selectAssetMonth(10)">10月</button><button class="month-btn" id="mbtn-11" onclick="selectAssetMonth(11)">11月</button><button class="month-btn" id="mbtn-12" onclick="selectAssetMonth(12)">12月</button>
+  </div>
+</div>
+<button class="btn btn-record" onclick="recordAsset()">💾 この月の総資産を記録</button>
     </div>
     <div class="card">
       <div class="chart-nav">
@@ -732,7 +751,7 @@ function deleteCategory(idx){
   state.categories.splice(idx,1);delete state.assetInput[cat];save();renderCatList();
 }
 function recordAsset(){
-  const y=TODAY.getFullYear(),m=TODAY.getMonth()+1;
+  const y=state.assetSelYear,m=state.assetSelMonth;
   const key=`${y}-${String(m).padStart(2,'0')}`;
   const total=calcAssetTotal();
   const values={};
@@ -742,6 +761,23 @@ function recordAsset(){
   state.assetRecords[key]={total,values};
   save();renderChart();
   alert(`${y}年${m}月の資産 ${yen(total)} を記録しました`);
+}
+
+function selectAssetMonth(m){
+  state.assetSelMonth=m;
+  renderAssetMonthSel();
+}
+function assetYearChange(delta){
+  state.assetSelYear+=delta;
+  renderAssetMonthSel();
+}
+function renderAssetMonthSel(){
+  const lbl=document.getElementById('asset-sel-year-lbl');
+  if(lbl)lbl.textContent=state.assetSelYear+'年';
+  for(let m=1;m<=12;m++){
+    const btn=document.getElementById('mbtn-'+m);
+    if(btn)btn.className='month-btn'+(m===state.assetSelMonth?' sel':'');
+  }
 }
 
 // ============================================================
@@ -897,7 +933,8 @@ window.addEventListener('appinstalled', () => {
 document.addEventListener('DOMContentLoaded', () => {
   load();
   renderCalendar();
-  if (state.activeTab === 'asset') switchTab('asset');
+  renderAssetMonthSel();
+  if (state.activeTab === 'asset') switchTab('asset'); renderAssetMonthSel();
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.activeElement.id === 'new-cat-name') addCategory();
