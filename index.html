@@ -512,6 +512,13 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-panel').forEach(p =>
     p.classList.toggle('active', p.id==='panel-'+tab)
   );
+  if(tab==='asset'){
+    state.assetSelYear=state.calYear;
+    state.assetSelMonth=state.calMonth+1;
+    state.chartYear=state.calYear;
+    renderAssetMonthSel();
+    renderChart();
+  }
 }
 
 // ============================================================
@@ -765,11 +772,17 @@ function recordAsset(){
 
 function selectAssetMonth(m){
   state.assetSelMonth=m;
+  state.calMonth=m-1;
+  state.chartYear=state.assetSelYear;
   renderAssetMonthSel();
+  renderChart();
 }
 function assetYearChange(delta){
   state.assetSelYear+=delta;
+  state.calYear=state.assetSelYear;
+  state.chartYear=state.assetSelYear;
   renderAssetMonthSel();
+  renderChart();
 }
 function renderAssetMonthSel(){
   if(!state.assetSelYear)state.assetSelYear=TODAY.getFullYear();
@@ -810,8 +823,8 @@ function renderCatInlineChart(cat, cid) {
   if (lbl) lbl.textContent = `${y}\u5e74`;
   const months = Array.from({length:12},(_,i)=>i+1);
   const vals = months.map(mo => {
-    const prefix = `${y}-${String(mo).padStart(2,'0')}-`;
-    const keys = Object.keys(state.assetRecords).filter(k => k.startsWith(prefix));
+    const prefix = `${y}-${String(mo).padStart(2,'0')}`;
+    const keys = Object.keys(state.assetRecords).filter(k => k===prefix||k.startsWith(prefix+'-'));
     if (!keys.length) return null;
     keys.sort();
     const rec = state.assetRecords[keys[keys.length-1]];
