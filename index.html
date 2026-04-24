@@ -266,10 +266,14 @@ header h1 { font-size: 17px; font-weight: 700; }
 }
 .cat-input:focus { border-color: #1a1a2e; background: white; }
 .cat-del-btn {
-  background: none; border: none; color: #ccc; font-size: 20px;
-  cursor: pointer; padding: 4px 4px; -webkit-tap-highlight-color: transparent;
+  background: #fff0f0; border: 1.5px solid #fca5a5; border-radius: 8px;
+  color: #e74c3c; font-size: 16px; font-weight: 700;
+  cursor: pointer; min-width: 36px; min-height: 36px;
+  padding: 4px 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
 }
-.cat-del-btn:active { color: #e74c3c; }
+.cat-del-btn:active { background: #fca5a5; }
 
 /* カテゴリー別インライングラフ */
 .cat-inline-chart {
