@@ -723,7 +723,7 @@ function renderCatList(){
           oninput="setAssetInput('${esc}',this.value)" onfocus="this.select()">
         ${canDel?`<button class="cat-del-btn" onclick="deleteCategory(${idx})">×</button>`:''}
       </div>
-      <div class="cat-inline-chart" id="${cid}">
+      <div class="cat-inline-chart open" id="${cid}">
         <div class="cat-inline-nav">
           <button class="cat-inline-nav-btn" onclick="catInlineYearChange('${esc}','${cid}',-1)">‹</button>
           <span id="${cid}-lbl"></span>
