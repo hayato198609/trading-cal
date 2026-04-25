@@ -896,7 +896,7 @@ function renderCatInlineChart(cat, cid) {
     const rec = state.assetRecords[keys[keys.length-1]];
     return (rec.values && rec.values[cat] != null) ? rec.values[cat] : null;
   });
-  if (!vals.some(v => v !== null)) {
+  if (!vals.some(v => v !== null && v !== 0)) {
     canvas.style.display='none'; noData.style.display='block'; return;
   }
   canvas.style.display='block'; noData.style.display='none';
@@ -905,7 +905,7 @@ function renderCatInlineChart(cat, cid) {
   const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
   const PAD = {top:16,right:14,bottom:30,left:6};
   const cW = W-PAD.left-PAD.right, cH = H-PAD.top-PAD.bottom;
-  const dv = vals.filter(v=>v!==null);
+  const dv = vals.filter(v=>v!==null&&v!==0);
   let maxV=Math.max(...dv), minV=Math.min(...dv);
   if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}
   else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
@@ -913,7 +913,7 @@ function renderCatInlineChart(cat, cid) {
   const yOf = v  => PAD.top+(1-(v-minV)/(maxV-minV))*cH;
   ctx.fillStyle='#bbb'; ctx.font='9px sans-serif'; ctx.textAlign='center';
   months.forEach(mo => ctx.fillText(mo+'\u6708', xOf(mo), H-PAD.bottom+12));
-  const pts=[]; vals.forEach((v,i)=>{ if(v!==null) pts.push([xOf(i+1),yOf(v),v]); });
+  const pts=[]; vals.forEach((v,i)=>{ if(v!==null&&v!==0) pts.push([xOf(i+1),yOf(v),v]); });
   const col='#6366f1';
   if(pts.length>=2){
     ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.lineJoin='round';
@@ -953,12 +953,12 @@ function renderChart(){
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
   const PAD={top:16,right:16,bottom:36,left:8},cW=W-PAD.left-PAD.right,cH=H-PAD.top-PAD.bottom;
-  const dv=vals.filter(v=>v!==null);let maxV=Math.max(...dv),minV=Math.min(...dv);
+  const dv=vals.filter(v=>v!==null&&v!==0);let maxV=Math.max(...dv),minV=Math.min(...dv);
   if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
   const xOf=mo=>PAD.left+((mo-1)/11)*cW,yOf=v=>PAD.top+(1-(v-minV)/(maxV-minV))*cH;
   ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='center';
   months.forEach(mo=>ctx.fillText(mo+'\u6708',xOf(mo),H-PAD.bottom+14));
-  const pts=[];vals.forEach((v,i)=>{if(v!==null)pts.push([xOf(i+1),yOf(v),v]);});
+  const pts=[];vals.forEach((v,i)=>{if(v!==null&&v!==0)pts.push([xOf(i+1),yOf(v),v]);});
   if(pts.length>=2){
     ctx.beginPath();ctx.strokeStyle='#4fc3f7';ctx.lineWidth=2.5;ctx.lineJoin='round';
     pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));ctx.stroke();
