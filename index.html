@@ -765,6 +765,7 @@ function recordAsset(){
   state.categories.forEach(c=>{
     values[c]=parseFloat(String(state.assetInput[c]||'0').replace(/,/g,''))||0;
   });
+  Object.keys(state.assetRecords).filter(k=>k.startsWith(key+'-')).forEach(k=>delete state.assetRecords[k]);
   state.assetRecords[key]={total,values};
   save();renderChart();
   alert(`${y}年${m}月の資産 ${yen(total)} を記録しました`);
