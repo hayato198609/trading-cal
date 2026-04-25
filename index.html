@@ -272,6 +272,8 @@ header h1 { font-size: 17px; font-weight: 700; }
 .cat-del-btn:active { background: #fca5a5; }
 .cat-move-btn { background: none; border: none; font-size: 15px; cursor: pointer; padding: 1px 5px; color: #6366f1; line-height: 1; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
 .cat-move-btn:active { opacity: 0.4; }
+.cat-item.cat-dragging { opacity: 0.45; transform: scale(0.97); transition: transform 0.1s; }
+.cat-item.cat-drag-above { border-top: 3px solid #6366f1; margin-top: -1px; }
 
 /* カテゴリー別インライングラフ */
 .cat-inline-chart {
@@ -745,6 +747,7 @@ function renderCatList(){
     </div>`;
   }).join('');
   updateAssetTotal();
+  initCatDrag();
 }
 function setAssetInput(cat,rawVal){
   const v=rawVal.replace(/[,，]/g,'').replace(/[−ー]/g,'-').trim(),n=parseFloat(v);
@@ -759,6 +762,56 @@ function addCategory(){
 function deleteCategory(idx){
   const cat=state.categories[idx];if(!confirm(`「${cat}」を削除しますか？`))return;
   state.categories.splice(idx,1);delete state.assetInput[cat];save();renderCatList();
+}
+var _catDrag={idx:null,el:null,timer:null,toIdx:null};
+function initCatDrag(){
+  var list=document.getElementById('cat-list');
+  if(!list||list._dragInited)return;
+  list._dragInited=true;
+  list.addEventListener('touchstart',function(e){
+    var item=e.target.closest('.cat-item');
+    if(!item)return;
+    var items=[].slice.call(list.querySelectorAll('.cat-item'));
+    var idx=items.indexOf(item);
+    if(idx<0)return;
+    _catDrag.timer=setTimeout(function(){
+      _catDrag.idx=idx;_catDrag.el=item;_catDrag.toIdx=idx;
+      item.classList.add('cat-dragging');
+      navigator.vibrate&&navigator.vibrate(40);
+    },400);
+  },{passive:true});
+  list.addEventListener('touchmove',function(e){
+    clearTimeout(_catDrag.timer);_catDrag.timer=null;
+    if(_catDrag.idx===null)return;
+    e.preventDefault();
+    var touch=e.touches[0];
+    var allItems=[].slice.call(list.querySelectorAll('.cat-item'));
+    var toIdx=allItems.length-1;
+    for(var i=0;i<allItems.length;i++){
+      if(allItems[i]===_catDrag.el)continue;
+      var rect=allItems[i].getBoundingClientRect();
+      if(touch.clientY<rect.top+rect.height/2){toIdx=i;break;}
+      else toIdx=i+1;
+    }
+    var adj=toIdx>_catDrag.idx?toIdx-1:toIdx;
+    _catDrag.toIdx=adj;
+    allItems.forEach(function(el,i){el.classList.toggle('cat-drag-above',i===adj&&i!==_catDrag.idx);});
+  },{passive:false});
+  function endDrag(){
+    clearTimeout(_catDrag.timer);_catDrag.timer=null;
+    var allItems=[].slice.call(list.querySelectorAll('.cat-item'));
+    allItems.forEach(function(el){el.classList.remove('cat-drag-above','cat-dragging');});
+    if(_catDrag.idx===null)return;
+    var from=_catDrag.idx,to=_catDrag.toIdx!=null?_catDrag.toIdx:_catDrag.idx;
+    _catDrag.idx=null;_catDrag.el=null;_catDrag.toIdx=null;
+    if(from!==to){
+      var cat=state.categories.splice(from,1)[0];
+      state.categories.splice(to,0,cat);
+      save();renderCatList();
+    }
+  }
+  list.addEventListener('touchend',endDrag,{passive:true});
+  list.addEventListener('touchcancel',endDrag,{passive:true});
 }
 function moveCategory(idx,dir){
   const ni=idx+dir;
