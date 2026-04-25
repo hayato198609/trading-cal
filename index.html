@@ -257,6 +257,7 @@ header h1 { font-size: 17px; font-weight: 700; }
   font-size: 13px; font-weight: 600; color: #1a1a2e;
   min-width: 90px; flex-shrink: 0;
   padding: 2px 0; text-align: left;
+  cursor: pointer; text-decoration: underline dotted;
 }
 .cat-name-btn:active { opacity: 0.6; }
 .cat-input {
@@ -729,7 +730,7 @@ function renderCatList(){
     const cid=catChartId(cat);
     return `<div class="cat-item">
       <div class="cat-row">
-        <span class="cat-name-btn">${esc}</span>
+        <span class="cat-name-btn" onclick="toggleCatChart('${esc}','${cid}')">${esc} ▾</span>
         <input class="cat-input" type="text" inputmode="numeric" value="${val}" placeholder="0"
           oninput="setAssetInput('${esc}',this.value)" onfocus="this.select()">
         ${canDel?`<button class="cat-del-btn" onclick="deleteCategory(${idx})">×</button>`:''}
