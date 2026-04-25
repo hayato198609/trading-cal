@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trading-cal-v3';
+const CACHE_NAME = 'trading-cal-v4';
 const ASSETS = ['./', './index.html'];
 
 self.addEventListener('install', event => {
