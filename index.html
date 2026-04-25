@@ -773,6 +773,7 @@ function recordAsset(){
   Object.keys(state.assetRecords).filter(k=>k.startsWith(key+'-')).forEach(k=>delete state.assetRecords[k]);
   state.assetRecords[key]={total,values};
   save();renderChart();
+  state.categories.forEach(function(cat){var cid=catChartId(cat);var p=document.getElementById(cid);if(p&&p.classList.contains('open'))renderCatInlineChart(cat,cid);});
   alert(`${y}年${m}月の資産 ${yen(total)} を記録しました`);
 }
 
