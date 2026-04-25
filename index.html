@@ -457,6 +457,12 @@ canvas#assetChart { width: 100%; display: block; }
 // STATE
 // ============================================================
 const TODAY = new Date();
+function goToMonth(mo){
+  state.calMonth=mo-1;
+  renderCalendar();
+  document.getElementById('panel-cal').scrollTop=0;
+}
+
 function todayKey() {
   return dateKey(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate());
 }
@@ -630,7 +636,7 @@ function renderMonthlyGrid() {
     const valHtml = val != null
       ? `<div class="monthly-cell-val ${pCls(val)}">${(val>=0?'+':'')+yen(val)}</div>`
       : `<div class="monthly-cell-val">—</div>`;
-    html += `<div class="${cls}"><div class="monthly-cell-lbl">${mo}月</div>${valHtml}</div>`;
+    html += `<div class="${cls}" onclick="goToMonth(${mo})"><div class="monthly-cell-lbl">${mo}月</div>${valHtml}</div>`;
   }
   html += '</div>';
   container.innerHTML = html;
