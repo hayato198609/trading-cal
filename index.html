@@ -512,6 +512,7 @@ function switchTab(tab) {
     state.assetSelYear=state.calYear;
     state.assetSelMonth=state.calMonth+1;
     state.chartYear=state.calYear;
+    renderCatList();
     renderAssetMonthSel();
     renderChart();
   }
