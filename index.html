@@ -789,6 +789,7 @@ function assetYearChange(delta){
   state.chartYear=state.assetSelYear;
   renderAssetMonthSel();
   renderChart();
+  state.categories.forEach(function(cat){var cid=catChartId(cat);var p=document.getElementById(cid);if(p&&p.classList.contains('open'))renderCatInlineChart(cat,cid);});
 }
 function renderAssetMonthSel(){
   if(!state.assetSelYear)state.assetSelYear=TODAY.getFullYear();
