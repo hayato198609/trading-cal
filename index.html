@@ -697,6 +697,7 @@ function syncWeekPanel() {
   if(cells.length<7)return;
   // 曜日ヘッ㄀ー行の高さに週計ヘッダーを合わせる
   const hdrH=Math.max(...cells.slice(0,7).map(c=>c.getBoundingClientRect().height));
+  if(hdrH===0){setTimeout(syncWeekPanel,150);return;}
   const wHdr=panel.querySelector('.cal-week-hdr');
   if(wHdr){wHdr.style.height=hdrH+'px';wHdr.style.boxSizing='border-box';}
   // 各週行の高さに週計アイテムを合わせる
