@@ -814,6 +814,9 @@ function initCatDrag(){
 function recordAsset(){
   const y=state.assetSelYear,m=state.assetSelMonth;
   const key=`${y}-${String(m).padStart(2,'0')}`;
+  if(state.assetRecords[key]){
+    if(!confirm(y+'\u5e74'+m+'\u6708\u306e\u8a18\u9332\u306f\u3059\u3067\u306b\u5b58\u5728\u3057\u307e\u3059\u3002\u4e0a\u66f8\u304d\u3057\u307e\u3059\u304b\uff1f'))return;
+  }
   const total=calcAssetTotal();
   const values={};
   state.categories.forEach(c=>{
