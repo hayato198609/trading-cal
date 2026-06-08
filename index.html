@@ -718,7 +718,7 @@ function syncWeekPanel() {
 // 資産管理
 // ============================================================
 function calcAssetTotal(){return state.categories.reduce((s,c)=>s+(parseFloat(String(state.assetInput[c]||'0').replace(/,/g,''))||0),0);}
-function updateAssetTotal(){const el=document.getElementById('asset-total-disp');if(el)el.textContent=yen(calcAssetTotal());const dl=document.getElementById('asset-last-update');if(dl){const d=state.lastAssetUpdate;dl.textContent=d?'最終更新日'+d:'';}}
+function updateAssetTotal(){const el=document.getElementById('asset-total-disp');if(el)el.textContent=yen(calcAssetTotal());const dl=document.getElementById('asset-last-update');if(dl){const d=state.lastAssetUpdate;dl.innerHTML=d?'最終更新日<br>'+d:'';}}
 function catChartId(cat) { return 'cc-' + btoa(encodeURIComponent(cat)).replace(/[^a-zA-Z0-9]/g,''); }
 
 function renderCatList(){
