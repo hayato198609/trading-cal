@@ -262,6 +262,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .year-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .year-stat-item { background: #f7f7f9; border-radius: 10px; padding: 10px 8px; text-align: center; }
 .year-stat-lbl { font-size: 11px; color: #999; font-weight: 600; margin-bottom: 4px; }
+.year-stat-sub { font-size: 11px; color: #aaa; margin-top: 3px; }
 .year-stat-val { font-size: 17px; font-weight: 700; margin-bottom: 2px; }
 .year-wl-row { font-size: 11px; display: flex; justify-content: center; gap: 8px; }
 
@@ -657,8 +658,11 @@ function renderStats(){
   const tot=entries.length;
   const wr=Math.round(wins/tot*100);
   const avg=entries.reduce((s,[,v])=>s+v,0)/tot;
-  const best=Math.max(...entries.map(([,v])=>v));
-  const worst=Math.min(...entries.map(([,v])=>v));
+  const bestEntry=entries.reduce((a,b)=>b[1]>a[1]?b:a);
+  const worstEntry=entries.reduce((a,b)=>b[1]<a[1]?b:a);
+  const best=bestEntry[1];
+  const worst=worstEntry[1];
+  const fmtD=(k)=>{const p=k.split('-');return parseInt(p[1])+'月'+parseInt(p[2])+'日';};
   const dowHtml=DN.map((n,i)=>{
     const d=dd[i];
     const a=d.cnt>0?d.sum/d.cnt:null;
@@ -669,7 +673,7 @@ function renderStats(){
   }).join('');
   const wc=wr>=50?'stat-pos':'stat-neg';
   const ac2=avg>=0?'stat-pos':'stat-neg';
-  ct.innerHTML='<div class="stats-card"><div class="stats-card-title">曜日別統計（'+y+'年）</div><div class="dow-grid">'+dowHtml+'</div></div><div class="stats-card"><div class="stats-card-title">今年度の成績（'+y+'年）</div><div class="year-stats-grid"><div class="year-stat-item"><div class="year-stat-lbl">勝率</div><div class="year-stat-val '+wc+'">'+wr+'%</div><div class="year-wl-row"><span class="stat-pos">'+wins+'勝</span><span class="stat-neg"> '+losses+'敗</span></div></div><div class="year-stat-item"><div class="year-stat-lbl">平均損益</div><div class="year-stat-val '+ac2+'">'+(avg>=0?'+':'')+yen(Math.round(avg))+'</div></div><div class="year-stat-item"><div class="year-stat-lbl">最高利益</div><div class="year-stat-val stat-pos">+'+yen(best)+'</div></div><div class="year-stat-item"><div class="year-stat-lbl">最大損失</div><div class="year-stat-val stat-neg">'+yen(worst)+'</div></div></div></div>';
+  ct.innerHTML='<div class="stats-card"><div class="stats-card-title">曜日別統計（'+y+'年）</div><div class="dow-grid">'+dowHtml+'</div></div><div class="stats-card"><div class="stats-card-title">今年度の成績（'+y+'年）</div><div class="year-stats-grid"><div class="year-stat-item"><div class="year-stat-lbl">勝率</div><div class="year-stat-val '+wc+'">'+wr+'%</div><div class="year-wl-row"><span class="stat-pos">'+wins+'勝</span><span class="stat-neg"> '+losses+'敗</span></div></div><div class="year-stat-item"><div class="year-stat-lbl">平均損益</div><div class="year-stat-val '+ac2+'">'+(avg>=0?'+':'')+yen(Math.round(avg))+'<div class="year-stat-sub">'+tot+'日間</div></div><div class="year-stat-item"><div class="year-stat-lbl">最高利益</div><div class="year-stat-val stat-pos">+'+yen(best)+'<div class="year-stat-sub">'+fmtD(bestEntry[0])+'</div></div><div class="year-stat-item"><div class="year-stat-lbl">最大損失</div><div class="year-stat-val stat-neg">'+yen(worst)+'<div class="year-stat-sub">'+fmtD(worstEntry[0])+'</div></div></div></div>';
 }
 function renderMonthlyGrid() {
   const container = document.getElementById('monthly-grid');
