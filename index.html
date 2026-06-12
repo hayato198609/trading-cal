@@ -426,7 +426,7 @@ canvas#assetChart { width: 100%; display: block; }
       </div>
       <div class="pnl-stats">
         <div class="pnl-stat-box"><div class="pnl-stat-lbl">今月</div><div class="pnl-stat-val" id="s-monthly">¥0</div></div>
-        <div class="pnl-stat-box"><div class="pnl-stat-lbl" id="s-yearly-lbl">今年</div><div class="pnl-stat-val" id="s-yearly">¥0</div></div>
+        <div class="pnl-stat-box"><div class="pnl-stat-lbl">今年</div><div class="pnl-stat-val" id="s-yearly">¥0</div></div>
       </div>
       <div id="monthly-grid"></div>
       <div class="stats-section" id="stats-section"></div>
@@ -633,13 +633,13 @@ function renderCalSummary() {
   const today = new Date(), y = state.calYear, m = state.calMonth;
   const monthly = calcMonthlyTotal(y, m+1) || 0;
   let yearly = 0;
-  const thisYear = today.getFullYear();
+  const thisYear = y;
   for (const [k, v] of Object.entries(state.dailyPnl)) {
     if (k.startsWith(`${thisYear}-`)) yearly += v;
   }
   const set = (id, v) => { const el = document.getElementById(id); if (!el) return;
     el.textContent = (v>=0?'+':'')+yen(v); el.className = 'pnl-stat-val '+pCls(v); };
-  set('s-monthly', monthly); set('s-yearly', yearly); const yl=document.getElementById('s-yearly-lbl');if(yl)yl.textContent=y+'年';
+  set('s-monthly', monthly); set('s-yearly', yearly);
   renderMonthlyGrid();
   renderStats();
 }
