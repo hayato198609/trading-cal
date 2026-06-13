@@ -253,7 +253,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .stats-section { margin-top: 16px; padding: 0 2px; }
 .stats-card { background: white; border-radius: 14px; padding: 14px 14px 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
 .stats-card-title { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 12px; }
-.dow-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+.dow-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 3px; }
 .dow-cell { text-align: center; padding: 4px 1px; }
 .dow-name { font-size: 11px; font-weight: 700; margin-bottom: 4px; }
 .dow-avg { font-size: 11px; font-weight: 700; margin-bottom: 2px; }
@@ -650,7 +650,7 @@ function renderStats(){
   const yStr=y+'-';
   const entries=Object.entries(state.dailyPnl).filter(([k])=>k.startsWith(yStr));
   if(!entries.length){ct.innerHTML='';return;}
-  const DN=['日','月','火','水','木','金','土'];
+  const DN=['月','火','水','木','金'];
   const dd=Array.from({length:7},()=>({sum:0,cnt:0,win:0}));
   entries.forEach(([k,v])=>{const d=new Date(k);const dw=d.getDay();dd[dw].sum+=v;dd[dw].cnt++;if(v>0)dd[dw].win++;});
   const wins=entries.filter(([,v])=>v>0).length;
@@ -664,12 +664,11 @@ function renderStats(){
   const worst=worstEntry[1];
   const fmtD=(k)=>{const p=k.split('-');return parseInt(p[1])+'月'+parseInt(p[2])+'日';};
   const dowHtml=DN.map((n,i)=>{
-    const d=dd[i];
+    const d=dd[i+1];
     const a=d.cnt>0?d.sum/d.cnt:null;
     const r=d.cnt>0?Math.round(d.win/d.cnt*100):null;
-    const nc=i===0?'stat-neg':i===6?'stat-pos':'';
     const ac=a===null?'':a>=0?'stat-pos':'stat-neg';
-    return '<div class="dow-cell"><div class="dow-name '+nc+'">'+n+'</div><div class="dow-avg '+ac+'">'+(a===null?'-':(a>=0?'+':'')+yen(Math.round(a)))+'</div><div class="dow-rate">'+(r===null?'-':r+'%')+'</div><div class="dow-count">'+(d.cnt>0?d.cnt+'回':'')+'</div></div>';
+    return '<div class="dow-cell"><div class="dow-name">'+n+'</div><div class="dow-avg '+ac+'">'+(a===null?'-':(a>=0?'+':'')+yen(Math.round(a)))+'</div><div class="dow-rate">'+(r===null?'-':r+'%')+'</div><div class="dow-count">'+(d.cnt>0?d.cnt+'回':'')+'</div></div>';
   }).join('');
   const wc=wr>=50?'stat-pos':'stat-neg';
   const ac2=avg>=0?'stat-pos':'stat-neg';
