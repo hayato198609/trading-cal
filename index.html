@@ -674,7 +674,7 @@ function renderStats(){
   const wc=wr>=50?'stat-pos':'stat-neg';
   const ac2=avg>=0?'stat-pos':'stat-neg';
   ct.innerHTML=
-    '<div class="stats-card"><div class="stats-card-title">曜日別統計（'+y+'年）</div><div class="dow-grid">'+dowHtml+'</div></div>'
+    '<div class="stats-card"><div class="stats-card-title">曜日別平均損益（'+y+'年）</div><div class="dow-grid">'+dowHtml+'</div></div>'
     +'<div class="stats-card"><div class="stats-card-title">今年度の成績（'+y+'年）</div>'
     +'<div class="year-quad">'
     +'<div class="year-quad-cell"><div class="year-quad-lbl">勝率</div><div class="year-quad-val '+wc+'">'+wr+'%</div><div class="year-wl-row"><span class="stat-pos">'+wins+'勝</span><span class="stat-neg"> '+losses+'敗</span></div></div>'
