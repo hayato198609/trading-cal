@@ -673,7 +673,15 @@ function renderStats(){
   }).join('');
   const wc=wr>=50?'stat-pos':'stat-neg';
   const ac2=avg>=0?'stat-pos':'stat-neg';
-  ct.innerHTML='<div class="stats-card"><div class="stats-card-title">曜日別統計（'+y+'年）</div><div class="dow-grid">'+dowHtml+'</div></div><div class="stats-card"><div class="stats-card-title">今年度の成績（'+y+'年）</div><div class="year-quad"><div class="year-quad-cell"><div class="year-quad-lbl">勝率</div><div class="year-quad-val '+wc+'">'+wr+'%</div><div class="year-wl-row"><span class="stat-pos">'+wins+'勝</span><span class="stat-neg"> '+losses+'敗</span></div></div><div class="year-quad-cell"><div class="year-quad-lbl">平均損益</div><div class="year-quad-val '+ac2+'">'+(avg>=0?'+':'')+yen(Math.round(avg))+'<div class="year-quad-sub">'+tot+'日間</div></div><div class="year-quad-cell"><div class="year-quad-lbl">最高利益</div><div class="year-quad-val stat-pos">+'+yen(best)+'<div class="year-quad-sub">'+fmtD(bestEntry[0])+'</div></div><div class="year-quad-cell"><div class="year-quad-lbl">最大損失</div><div class="year-quad-val stat-neg">'+yen(worst)+'<div class="year-quad-sub">'+fmtD(worstEntry[0])+'</div></div></div></div>';
+  ct.innerHTML=
+    '<div class="stats-card"><div class="stats-card-title">曜日別統計（'+y+'年）</div><div class="dow-grid">'+dowHtml+'</div></div>'
+    +'<div class="stats-card"><div class="stats-card-title">今年度の成績（'+y+'年）</div>'
+    +'<div class="year-quad">'
+    +'<div class="year-quad-cell"><div class="year-quad-lbl">勝率</div><div class="year-quad-val '+wc+'">'+wr+'%</div><div class="year-wl-row"><span class="stat-pos">'+wins+'勝</span><span class="stat-neg"> '+losses+'敗</span></div></div>'
+    +'<div class="year-quad-cell"><div class="year-quad-lbl">平均損益</div><div class="year-quad-val '+ac2+'">'+(avg>=0?'+':'')+yen(Math.round(avg))+'</div><div class="year-quad-sub">'+tot+'日間</div></div>'
+    +'<div class="year-quad-cell"><div class="year-quad-lbl">最高利益</div><div class="year-quad-val stat-pos">+'+yen(best)+'</div><div class="year-quad-sub">'+fmtD(bestEntry[0])+'</div></div>'
+    +'<div class="year-quad-cell"><div class="year-quad-lbl">最大損失</div><div class="year-quad-val stat-neg">'+yen(worst)+'</div><div class="year-quad-sub">'+fmtD(worstEntry[0])+'</div></div>'
+    +'</div></div>';
 }
 function renderMonthlyGrid() {
   const container = document.getElementById('monthly-grid');
