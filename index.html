@@ -679,7 +679,7 @@ function renderStats(){
     +'<div class="year-quad">'
     +'<div class="year-quad-cell"><div class="year-quad-lbl">勝率</div><div class="year-quad-val '+wc+'">'+wr+'%</div><div class="year-quad-sub">'+wins+'日 / '+tot+'日</div></div>'
     +'<div class="year-quad-cell"><div class="year-quad-lbl">平均損益</div><div class="year-quad-val '+ac2+'">'+(avg>=0?'+':'')+yen(Math.round(avg))+'</div><div class="year-quad-sub">'+tot+'日</div></div>'
-    +'<div class="year-quad-cell"><div class="year-quad-lbl">最高利益</div><div class="year-quad-val stat-pos">+'+yen(best)+'</div><div class="year-quad-sub">'+fmtD(bestEntry[0])+'</div></div>'
+    +'<div class="year-quad-cell"><div class="year-quad-lbl">最大利益</div><div class="year-quad-val stat-pos">+'+yen(best)+'</div><div class="year-quad-sub">'+fmtD(bestEntry[0])+'</div></div>'
     +'<div class="year-quad-cell"><div class="year-quad-lbl">最大損失</div><div class="year-quad-val stat-neg">'+yen(worst)+'</div><div class="year-quad-sub">'+fmtD(worstEntry[0])+'</div></div>'
     +'</div></div>';
 }
