@@ -650,19 +650,18 @@ function renderStats(){
   const y=state.calYear;
   const yStr=y+'-';
   const entries=Object.entries(state.dailyPnl).filter(([k])=>k.startsWith(yStr));
-  if(!entries.length){ct.innerHTML='';return;}
   const DN=['月','火','水','木','金'];
   const dd=Array.from({length:7},()=>({sum:0,cnt:0,win:0}));
   entries.forEach(([k,v])=>{const d=new Date(k);const dw=d.getDay();dd[dw].sum+=v;dd[dw].cnt++;if(v>0)dd[dw].win++;});
   const wins=entries.filter(([,v])=>v>0).length;
   const losses=entries.filter(([,v])=>v<0).length;
   const tot=entries.length;
-  const wr=Math.round(wins/tot*100);
-  const avg=entries.reduce((s,[,v])=>s+v,0)/tot;
-  const bestEntry=entries.reduce((a,b)=>b[1]>a[1]?b:a);
-  const worstEntry=entries.reduce((a,b)=>b[1]<a[1]?b:a);
-  const best=bestEntry[1];
-  const worst=worstEntry[1];
+  const wr=tot>0?Math.round(wins/tot*100):null;
+  const avg=tot>0?entries.reduce((s,[,v])=>s+v,0)/tot:null;
+  const bestEntry=tot>0?entries.reduce((a,b)=>b[1]>a[1]?b:a):null;
+  const worstEntry=tot>0?entries.reduce((a,b)=>b[1]<a[1]?b:a):null;
+  const best=bestEntry?bestEntry[1]:null;
+  const worst=worstEntry?worstEntry[1]:null;
   const fmtD=(k)=>{const p=k.split('-');return parseInt(p[1])+'月'+parseInt(p[2])+'日';};
   const dowHtml=DN.map((n,i)=>{
     const d=dd[i+1];
@@ -671,16 +670,16 @@ function renderStats(){
     const ac=a===null?'':a>=0?'stat-pos':'stat-neg';
     return '<div class="dow-cell"><div class="dow-name">'+n+'</div><div class="dow-avg '+ac+'">'+(a===null?'-':(a>=0?'+':'')+yen(Math.round(a)))+'</div><div class="dow-rate">'+(r===null?'-':'勝率'+r+'%')+'</div><div class="dow-count">'+(r===null?'':d.win+'日 / '+d.cnt+'日')+'</div></div>';
   }).join('');
-  const wc=wr>=50?'stat-pos':'stat-neg';
-  const ac2=avg>=0?'stat-pos':'stat-neg';
+  const wc=wr!==null&&wr>=50?'stat-pos':'stat-neg';
+  const ac2=avg!==null&&avg>=0?'stat-pos':'stat-neg';
   ct.innerHTML=
     '<div class="stats-card"><div class="stats-card-title">曜日別平均損益（'+y+'年）</div><div class="dow-grid">'+dowHtml+'</div></div>'
     +'<div class="stats-card"><div class="stats-card-title">今年度の成績（'+y+'年）</div>'
     +'<div class="year-quad">'
-    +'<div class="year-quad-cell"><div class="year-quad-lbl">勝率</div><div class="year-quad-val '+wc+'">'+wr+'%</div><div class="year-quad-sub">'+wins+'日 / '+tot+'日</div></div>'
-    +'<div class="year-quad-cell"><div class="year-quad-lbl">平均損益</div><div class="year-quad-val '+ac2+'">'+(avg>=0?'+':'')+yen(Math.round(avg))+'</div></div>'
-    +'<div class="year-quad-cell"><div class="year-quad-lbl">最大利益</div><div class="year-quad-val stat-pos">'+(best>0?'+'+yen(best):'-')+'</div>'+(best>0?'<div class="year-quad-sub">'+fmtD(bestEntry[0])+'</div>':'')+'</div>'
-    +'<div class="year-quad-cell"><div class="year-quad-lbl">最大損失</div><div class="year-quad-val stat-neg">'+(worst<0?yen(worst):'-')+'</div>'+(worst<0?'<div class="year-quad-sub">'+fmtD(worstEntry[0])+'</div>':'')+'</div>'
+    +'<div class="year-quad-cell"><div class="year-quad-lbl">勝率</div><div class="year-quad-val '+wc+'">'+(wr!==null?wr+'%':'-')+'</div><div class="year-quad-sub">'+wins+'日 / '+tot+'日</div></div>'
+    +'<div class="year-quad-cell"><div class="year-quad-lbl">平均損益</div><div class="year-quad-val '+ac2+'">'+(avg!==null?(avg>=0?'+':'')+yen(Math.round(avg)):'-')+'</div></div>'
+    +'<div class="year-quad-cell"><div class="year-quad-lbl">最大利益</div><div class="year-quad-val stat-pos">'+(best!==null&&best>0?'+'+yen(best):'-')+'</div>'+(best!==null&&best>0?'<div class="year-quad-sub">'+fmtD(bestEntry[0])+'</div>':'')+'</div>'
+    +'<div class="year-quad-cell"><div class="year-quad-lbl">最大損失</div><div class="year-quad-val stat-neg">'+(worst!==null&&worst<0?yen(worst):'-')+'</div>'+(worst!==null&&worst<0?'<div class="year-quad-sub">'+fmtD(worstEntry[0])+'</div>':'')+'</div>'
     +'</div></div>';
 }
 function renderMonthlyGrid() {
