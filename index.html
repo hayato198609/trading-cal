@@ -669,7 +669,7 @@ function renderStats(){
     const a=d.cnt>0?d.sum/d.cnt:null;
     const r=d.cnt>0?Math.round(d.win/d.cnt*100):null;
     const ac=a===null?'':a>=0?'stat-pos':'stat-neg';
-    return '<div class="dow-cell"><div class="dow-name">'+n+'</div><div class="dow-avg '+ac+'">'+(a===null?'-':(a>=0?'+':'')+yen(Math.round(a)))+'</div><div class="dow-rate">'+(r===null?'-':r+'% '+d.cnt+'日')+'</div></div>';
+    return '<div class="dow-cell"><div class="dow-name">'+n+'</div><div class="dow-avg '+ac+'">'+(a===null?'-':(a>=0?'+':'')+yen(Math.round(a)))+'</div><div class="dow-rate">'+(r===null?'-':'医率'+r+'%')+'</div><div class="dow-count">'+(r===null?'':d.cnt+'日')+'</div></div>';
   }).join('');
   const wc=wr>=50?'stat-pos':'stat-neg';
   const ac2=avg>=0?'stat-pos':'stat-neg';
