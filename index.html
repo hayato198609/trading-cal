@@ -48,6 +48,9 @@ header {
   z-index: 100;
 }
 header h1 { font-size: 17px; font-weight: 700; }
+.header-actions { margin-left: auto; display: flex; gap: 6px; }
+.data-btn { font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 8px; border: none; cursor: pointer; background: rgba(255,255,255,0.15); color: white; }
+.data-btn:active { background: rgba(255,255,255,0.28); }
 
 .tab-bar {
   background: #1a1a2e;
@@ -404,6 +407,10 @@ canvas#assetChart { width: 100%; display: block; }
 <header>
   <span style="font-size:22px">💹</span>
   <h1>取引収支・資産管理</h1>
+  <div class="header-actions">
+    <button class="data-btn export-btn" onclick="exportData()">保存</button>
+    <button class="data-btn import-btn" onclick="importData()">復元</button>
+  </div>
 </header>
 
 <div class="tab-bar">
@@ -1082,6 +1089,33 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.activeElement.id === 'new-cat-name') addCategory();
 });
+
+function exportData(){
+  const data=localStorage.getItem('stk_cal_v3')||'{}';
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date();
+  a.download='trading-cal-'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.json';
+  a.href=url;a.click();URL.revokeObjectURL(url);
+}
+function importData(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.json';
+  inp.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        JSON.parse(ev.target.result);
+        localStorage.setItem('stk_cal_v3',ev.target.result);
+        location.reload();
+      }catch(err){alert('ファイル形式エラー');}
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
 </script>
 </body>
 </html>
