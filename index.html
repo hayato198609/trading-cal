@@ -238,6 +238,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .monthly-cell-val { font-size: 12px; font-weight: 700; color: #ccc; }
 .monthly-cell-val.pos { color: #1e8a4a; }
 .monthly-cell-val.neg { color: #c0392b; }
+.monthly-cell-wr { font-size: 10px; color: #999; margin-top: 2px; }
 
 /* ASSET */
 .section-title { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 14px; }
@@ -706,7 +707,11 @@ function renderMonthlyGrid() {
     const valHtml = val != null
       ? `<div class="monthly-cell-val ${pCls(val)}">${(val>=0?'+':'')+yen(val)}</div>`
       : `<div class="monthly-cell-val">—</div>`;
-    html += `<div class="${cls}" onclick="goToMonth(${mo})"><div class="monthly-cell-lbl">${mo}月</div>${valHtml}</div>`;
+    const mEnt=Object.entries(state.dailyPnl).filter(([k])=>k.startsWith(key+'-'));
+    const mTot=mEnt.length,mWins=mEnt.filter(([,v])=>v>0).length;
+    const mWr=mTot>0?Math.round(mWins/mTot*100):null;
+    const wrHtml=mWr!==null?`<div class="monthly-cell-wr">${mWr}%</div>`:'';
+    html += `<div class="${cls}" onclick="goToMonth(${mo})"><div class="monthly-cell-lbl">${mo}月</div>${valHtml}${wrHtml}</div>`;
   }
   html += '</div>';
   container.innerHTML = html;
