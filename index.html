@@ -710,7 +710,7 @@ function renderMonthlyGrid() {
     const mEnt=Object.entries(state.dailyPnl).filter(([k])=>k.startsWith(key+'-'));
     const mTot=mEnt.length,mWins=mEnt.filter(([,v])=>v>0).length;
     const mWr=mTot>0?Math.round(mWins/mTot*100):null;
-    const wrHtml=mWr!==null?`<div class="monthly-cell-wr">${mWr}%</div>`:'';
+    const wrHtml=mWr!==null?`<div class="monthly-cell-wr">勒率${mWr}%</div>`:'';
     html += `<div class="${cls}" onclick="goToMonth(${mo})"><div class="monthly-cell-lbl">${mo}月</div>${valHtml}${wrHtml}</div>`;
   }
   html += '</div>';
