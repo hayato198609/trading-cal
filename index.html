@@ -1011,10 +1011,9 @@ function renderCatInlineChart(cat, cid) {
 // ============================================================
 function changeChartYear(delta){state.chartYear+=delta;save();renderChart();}
 function renderChart(){
-  const y=state.chartYear;document.getElementById('chart-year-lbl').textContent=`${y}\u5e74`;
+  const y=state.chartYear;document.getElementById('chart-year-lbl').textContent=`${y}年`;
   const canvas=document.getElementById('assetChart'),noData=document.getElementById('chart-no-data');
   const months=Array.from({length:12},(_,i)=>i+1);
-  // 各月の記録の中から最新日を選ぶ
   const vals = months.map(mo => {
     const prefix = `${y}-${String(mo).padStart(2,'0')}`;
     const keys = Object.keys(state.assetRecords).filter(k => k===prefix||k.startsWith(prefix+'-'));
@@ -1024,28 +1023,29 @@ function renderChart(){
   });
   if(!vals.some(v=>v!==null)){canvas.style.display='none';noData.style.display='block';return;}
   canvas.style.display='block';noData.style.display='none';
-  const W=canvas.parentElement.clientWidth-40,H=200;
+  const W=canvas.parentElement.clientWidth-40,H=220;
   canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
-  const PAD={top:16,right:16,bottom:36,left:8},cW=W-PAD.left-PAD.right,cH=H-PAD.top-PAD.bottom;
+  const PAD={top:28,right:8,bottom:36,left:8},cW=W-PAD.left-PAD.right,cH=H-PAD.top-PAD.bottom;
   const dv=vals.filter(v=>v!==null&&v!==0);let maxV=Math.max(...dv),minV=Math.min(...dv);
-  if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}else{const p=(maxV-minV)*0.12;maxV+=p;minV=Math.max(0,minV-p);}
-  const xOf=mo=>PAD.left+((mo-1)/11)*cW,yOf=v=>PAD.top+(1-(v-minV)/(maxV-minV))*cH;
+  if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}else{const p=(maxV-minV)*0.15;maxV+=p;minV=Math.max(0,minV-p);}
+  const barW=cW/12*0.62;
+  const xCenter=mo=>PAD.left+((mo-0.5)/12)*cW;
+  const yOf=v=>PAD.top+(1-(v-minV)/(maxV-minV))*cH;
+  const base=PAD.top+cH;
   ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='center';
-  months.forEach(mo=>ctx.fillText(mo+'\u6708',xOf(mo),H-PAD.bottom+14));
-  const pts=[];vals.forEach((v,i)=>{if(v!==null&&v!==0)pts.push([xOf(i+1),yOf(v),v]);});
-  if(pts.length>=2){
-    ctx.beginPath();ctx.strokeStyle='#4fc3f7';ctx.lineWidth=2.5;ctx.lineJoin='round';
-    pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));ctx.stroke();
-    ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
-    pts.forEach(([x,y])=>ctx.lineTo(x,y));
-    ctx.lineTo(pts[pts.length-1][0],PAD.top+cH);ctx.lineTo(pts[0][0],PAD.top+cH);
-    ctx.closePath();ctx.fillStyle='rgba(79,195,247,0.1)';ctx.fill();
-  }
-  pts.forEach(([x,y,v])=>{
-    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='#4fc3f7';ctx.fill();
-    ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.fillStyle='#1a1a2e';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText(yen(v),x,y-9);
+  months.forEach(mo=>ctx.fillText(mo+'月',xCenter(mo),H-PAD.bottom+14));
+  vals.forEach((v,i)=>{
+    if(v===null||v===0)return;
+    const mo=i+1,x=xCenter(mo),y=yOf(v);
+    ctx.fillStyle='#4fc3f7';
+    ctx.beginPath();
+    const r=3;
+    ctx.moveTo(x-barW/2+r,y);ctx.lineTo(x+barW/2-r,y);ctx.arcTo(x+barW/2,y,x+barW/2,y+r,r);
+    ctx.lineTo(x+barW/2,base);ctx.lineTo(x-barW/2,base);ctx.lineTo(x-barW/2,y+r);
+    ctx.arcTo(x-barW/2,y,x-barW/2+r,y,r);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#333';ctx.font='bold 9px sans-serif';ctx.textAlign='center';
+    ctx.fillText(yen(v),x,y-5);
   });
 }
 function shortYen(v){return(v<0?'-':'')+'¥'+Math.round(Math.abs(v)).toLocaleString('ja-JP');}
