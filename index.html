@@ -369,6 +369,9 @@ canvas#assetChart { width: 100%; display: block; }
 .exp-row-del{width:26px;height:26px;border-radius:50%;background:#fee2e2;color:#ef4444;border:none;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
 .exp-total-row{display:flex;justify-content:space-between;align-items:center;padding:13px 2px 4px;font-weight:700;font-size:15px;border-top:1.5px solid #e8e8e8;margin-top:4px;}
 .exp-add-cat-btn{background:none;border:1.5px dashed #bbb;color:#888;padding:8px 24px;border-radius:20px;font-size:13px;cursor:pointer;}
+.exp-drag-handle{width:22px;font-size:16px;color:#ccc;cursor:grab;user-select:none;text-align:center;flex-shrink:0;touch-action:none;padding:0 2px;}
+.exp-drag-handle:active{cursor:grabbing;color:#888;}
+.exp-row.exp-drag-target{border-top:2.5px solid #1a1a2e;}
 
 @media (max-width: 600px) {
   .main { padding: 8px; }
@@ -646,6 +649,67 @@ function closePnlModal() {
   document.getElementById('pnl-modal').classList.remove('open');
   _editKey = null;
   _expCatIdx = -1;
+}
+function expDragStart(e,idx){
+  e.preventDefault();
+  _expDragIdx=idx;_expDragActive=false;_expDragOverIdx=idx;
+  _expDragStartY=e.touches?e.touches[0].clientY:e.clientY;
+  _expDragTimer=setTimeout(function(){
+    _expDragActive=true;
+    navigator.vibrate&&navigator.vibrate(50);
+    var row=document.getElementById('exp-row-'+idx);
+    var rect=row.getBoundingClientRect();
+    _expDragClone=row.cloneNode(true);
+    _expDragClone.removeAttribute('id');
+    _expDragClone.style.cssText='position:fixed;left:'+rect.left+'px;top:'+rect.top+'px;width:'+rect.width+'px;z-index:999;opacity:0.9;box-shadow:0 6px 20px rgba(0,0,0,0.18);border-radius:8px;pointer-events:none;background:#fff;';
+    _expDragCloneTop=rect.top;
+    document.body.appendChild(_expDragClone);
+    row.style.opacity='0.3';
+  },400);
+  document.addEventListener('touchmove',expDragMove,{passive:false});
+  document.addEventListener('touchend',expDragEnd,{once:true});
+  document.addEventListener('mousemove',expDragMove);
+  document.addEventListener('mouseup',expDragEnd,{once:true});
+}
+function expDragMove(e){
+  var clientY=e.touches?e.touches[0].clientY:e.clientY;
+  if(!_expDragActive){
+    if(Math.abs(clientY-_expDragStartY)>8){clearTimeout(_expDragTimer);expDragCleanup();}
+    return;
+  }
+  e.preventDefault();
+  if(_expDragClone)_expDragClone.style.top=(_expDragCloneTop+(clientY-_expDragStartY))+'px';
+  var rows=document.querySelectorAll('.exp-row[data-idx]');
+  var newOver=_expDragIdx;
+  rows.forEach(function(row){
+    var rect=row.getBoundingClientRect();
+    if(clientY>rect.top+rect.height/2)newOver=parseInt(row.dataset.idx);
+  });
+  if(newOver!==_expDragOverIdx){
+    _expDragOverIdx=newOver;
+    rows.forEach(function(r){r.classList.remove('exp-drag-target');});
+    var t=document.querySelector('.exp-row[data-idx="'+newOver+'"]');
+    if(t&&newOver!==_expDragIdx)t.classList.add('exp-drag-target');
+  }
+}
+function expDragEnd(){
+  clearTimeout(_expDragTimer);
+  document.removeEventListener('touchmove',expDragMove);
+  document.removeEventListener('mousemove',expDragMove);
+  if(_expDragActive&&_expDragIdx>=0&&_expDragOverIdx>=0&&_expDragOverIdx!==_expDragIdx){
+    var cats=state.expenseCategories.slice();
+    var item=cats.splice(_expDragIdx,1)[0];
+    cats.splice(_expDragOverIdx,0,item);
+    state.expenseCategories=cats;save();
+  }
+  expDragCleanup();
+  renderExpensePanel();
+}
+function expDragCleanup(){
+  _expDragActive=false;
+  if(_expDragClone){_expDragClone.remove();_expDragClone=null;}
+  document.querySelectorAll('.exp-row[data-idx]').forEach(function(r){r.style.opacity='';r.classList.remove('exp-drag-target');});
+  _expDragIdx=-1;_expDragOverIdx=-1;
 }
 function pnlModalBgClick(e) {
   if (e.target === document.getElementById('pnl-modal')) closePnlModal();
@@ -1104,6 +1168,7 @@ function renderChart(){
 // 支出管理
 // ============================================================
 let _expCatIdx = -1;
+let _expDragIdx=-1,_expDragOverIdx=-1,_expDragActive=false,_expDragTimer=null,_expDragClone=null,_expDragStartY=0,_expDragCloneTop=0;
 
 function renderExpensePanel(){
   const y=state.expSelYear,m=state.expSelMonth;
@@ -1118,7 +1183,7 @@ function renderExpensePanel(){
     const amt=monthExp[cat]||0;
     total+=amt;
     const esc=escHtml(cat);
-    html+='<div class="exp-row"><div class="exp-row-name">'+esc+'</div><div class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</div><button class="exp-row-add" onclick="openExpModal('+i+')">＋</button><button class="exp-row-del" onclick="delExpCat('+i+')">×</button></div>';
+    html+='<div class="exp-row" id="exp-row-'+i+'" data-idx="'+i+'"><div class="exp-drag-handle" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')">⠿</div><div class="exp-row-name">'+esc+'</div><div class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</div><button class="exp-row-add" onclick="openExpModal('+i+')">＋</button><button class="exp-row-del" onclick="delExpCat('+i+')">×</button></div>';
   });
   if(cats.length>0){
     html+='<div class="exp-total-row"><span>合計</span><span>'+(total>0?yen(total):'—')+'</span></div>';
