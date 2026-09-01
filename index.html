@@ -371,7 +371,7 @@ canvas#assetChart { width: 100%; display: block; }
 .exp-add-cat-btn{background:none;border:1.5px dashed #bbb;color:#888;padding:8px 24px;border-radius:20px;font-size:13px;cursor:pointer;}
 .exp-drag-handle{width:22px;font-size:16px;color:#ccc;cursor:grab;user-select:none;text-align:center;flex-shrink:0;touch-action:none;padding:0 2px;}
 .exp-drag-handle:active{cursor:grabbing;color:#888;}
-.exp-row.exp-drag-target{border-top:2.5px solid #1a1a2e;}
+.cat-item.exp-drag-target{border-top:2.5px solid #1a1a2e;}
 
 @media (max-width: 600px) {
   .main { padding: 8px; }
@@ -678,7 +678,7 @@ function expDragMove(e){
   }
   e.preventDefault();
   if(_expDragClone)_expDragClone.style.top=(_expDragCloneTop+(clientY-_expDragStartY))+'px';
-  var rows=document.querySelectorAll('.exp-row[data-idx]');
+  var rows=document.querySelectorAll('.cat-item[data-idx]');
   var newOver=_expDragIdx;
   rows.forEach(function(row){
     var rect=row.getBoundingClientRect();
@@ -687,7 +687,7 @@ function expDragMove(e){
   if(newOver!==_expDragOverIdx){
     _expDragOverIdx=newOver;
     rows.forEach(function(r){r.classList.remove('exp-drag-target');});
-    var t=document.querySelector('.exp-row[data-idx="'+newOver+'"]');
+    var t=document.querySelector('.cat-item[data-idx="'+newOver+'"]');
     if(t&&newOver!==_expDragIdx)t.classList.add('exp-drag-target');
   }
 }
@@ -707,7 +707,7 @@ function expDragEnd(){
 function expDragCleanup(){
   _expDragActive=false;
   if(_expDragClone){_expDragClone.remove();_expDragClone=null;}
-  document.querySelectorAll('.exp-row[data-idx]').forEach(function(r){r.style.opacity='';r.classList.remove('exp-drag-target');});
+  document.querySelectorAll('.cat-item[data-idx]').forEach(function(r){r.style.opacity='';r.classList.remove('exp-drag-target');});
   _expDragIdx=-1;_expDragOverIdx=-1;
 }
 function pnlModalBgClick(e) {
@@ -1182,7 +1182,7 @@ function renderExpensePanel(){
     const amt=monthExp[cat]||0;
     total+=amt;
     const esc=escHtml(cat);
-    html+='<div class="exp-row" id="exp-row-'+i+'" data-idx="'+i+'"><div class="exp-drag-handle" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')">⠿</div><div class="exp-row-name">'+esc+'</div><div class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</div><button class="exp-row-add" onclick="openExpModal('+i+')">＋</button><button class="exp-row-del" onclick="delExpCat('+i+')">×</button></div>';
+    html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'"><div class="cat-row"><div class="exp-drag-handle" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')">⠿</div><span class="cat-name-btn" style="cursor:default;text-decoration:none">'+esc+'</span><input class="cat-input" type="text" inputmode="numeric" value="'+(amt||'')+'" placeholder="0" onchange="setExpCatAmt('+i+',this.value)" onfocus="this.select()"><button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div></div>';
   });
   if(cats.length>0){
     html+='<div class="exp-total-row"><span>合計</span><span>'+(total>0?yen(total):'—')+'</span></div>';
@@ -1200,6 +1200,17 @@ function changeExpMonth(d){
   save();renderExpensePanel();
 }
 
+function setExpCatAmt(idx,value){
+  const val=parseFloat(String(value).replace(/[,，]/g,'').replace(/[−ー]/g,'-'));
+  const y=state.expSelYear,m=state.expSelMonth;
+  const key=y+'-'+String(m).padStart(2,'0');
+  if(!state.expenses)state.expenses={};
+  if(!state.expenses[key])state.expenses[key]={};
+  const cat=state.expenseCategories[idx];
+  if(cat===undefined)return;
+  if(!isNaN(val)&&val>0){state.expenses[key][cat]=val;}else{delete state.expenses[key][cat];}
+  save();renderExpensePanel();
+}
 function openExpModal(catIdx){
   _expCatIdx=catIdx;
   const cat=state.expenseCategories[catIdx];
