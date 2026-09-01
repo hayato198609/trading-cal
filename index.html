@@ -1182,7 +1182,7 @@ function renderExpensePanel(){
     const amt=monthExp[cat]||0;
     total+=amt;
     const esc=escHtml(cat);
-    html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'"><div class="cat-row"><div class="exp-drag-handle" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')">⠿</div><span class="cat-name-btn" style="cursor:default;text-decoration:none">'+esc+'</span><input class="cat-input" type="text" inputmode="numeric" value="'+(amt||'')+'" placeholder="0" onchange="setExpCatAmt('+i+',this.value)" onfocus="this.select()"><button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div></div>';
+    html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'"><div class="cat-row"><div class="exp-drag-handle" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')">⠿</div><span class="cat-name-btn" style="cursor:default;text-decoration:none">'+esc+'</span><span class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</span><input class="cat-input" type="text" inputmode="numeric" value="" placeholder="0" onchange="setExpCatAmt('+i+',this.value)" onfocus="this.select()"><button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div></div>';
   });
   if(cats.length>0){
     html+='<div class="exp-total-row"><span>合計</span><span>'+(total>0?yen(total):'—')+'</span></div>';
@@ -1208,7 +1208,7 @@ function setExpCatAmt(idx,value){
   if(!state.expenses[key])state.expenses[key]={};
   const cat=state.expenseCategories[idx];
   if(cat===undefined)return;
-  if(!isNaN(val)&&val>0){state.expenses[key][cat]=val;}else{delete state.expenses[key][cat];}
+  if(!isNaN(val)&&val>0){state.expenses[key][cat]=(state.expenses[key][cat]||0)+val;}
   save();renderExpensePanel();
 }
 function openExpModal(catIdx){
