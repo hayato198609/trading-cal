@@ -1109,7 +1109,7 @@ function renderExpensePanel(){
   const y=state.expSelYear,m=state.expSelMonth;
   const lbl=document.getElementById('exp-month-lbl');
   if(lbl)lbl.textContent=y+'年'+m+'月';
-  const key=y+'-'+String(m).padStart(2,'00'.length);
+  const key=y+'-'+String(m).padStart(2,'0');
   const monthExp=(state.expenses&&state.expenses[key])||{};
   const cats=state.expenseCategories||[];
   let total=0;
