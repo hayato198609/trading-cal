@@ -360,6 +360,16 @@ canvas#assetChart { width: 100%; display: block; }
   background: none; color: rgba(255,255,255,0.7); font-size: 20px; border: none; cursor: pointer;
 }
 
+/* 支出管理 */
+.exp-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:16px;}
+.exp-row{display:flex;align-items:center;padding:11px 2px;border-bottom:1px solid #f0f0f0;gap:8px;}
+.exp-row-name{flex:1;font-size:14px;font-weight:600;color:#1a1a2e;}
+.exp-row-amt{font-size:14px;font-weight:700;min-width:80px;text-align:right;color:#1a1a2e;}
+.exp-row-add{width:30px;height:30px;border-radius:50%;background:#1a1a2e;color:white;border:none;font-size:20px;line-height:1;cursor:pointer;flex-shrink:0;}
+.exp-row-del{width:26px;height:26px;border-radius:50%;background:#fee2e2;color:#ef4444;border:none;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.exp-total-row{display:flex;justify-content:space-between;align-items:center;padding:13px 2px 4px;font-weight:700;font-size:15px;border-top:1.5px solid #e8e8e8;margin-top:4px;}
+.exp-add-cat-btn{background:none;border:1.5px dashed #bbb;color:#888;padding:8px 24px;border-radius:20px;font-size:13px;cursor:pointer;}
+
 @media (max-width: 600px) {
   .main { padding: 8px; }
   .card { padding: 12px 8px; }
@@ -417,6 +427,7 @@ canvas#assetChart { width: 100%; display: block; }
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('cal')">取引収支</button>
   <button class="tab-btn"        onclick="switchTab('asset')">資産管理</button>
+  <button class="tab-btn"        onclick="switchTab('expense')">支出管理</button>
 </div>
 
 <div class="main">
@@ -481,6 +492,22 @@ canvas#assetChart { width: 100%; display: block; }
     </div>
   </div>
 
+
+  <!-- 支出管理タブ -->
+  <div class="tab-panel" id="panel-expense">
+    <div class="card">
+      <div class="exp-nav">
+        <button class="cal-nav-btn" onclick="changeExpMonth(-1)">‹</button>
+        <span id="exp-month-lbl" style="font-size:15px;font-weight:700;color:#1a1a2e"></span>
+        <button class="cal-nav-btn" onclick="changeExpMonth(1)">›</button>
+      </div>
+      <div id="exp-cat-list"></div>
+      <div style="margin-top:14px;text-align:center">
+        <button class="exp-add-cat-btn" onclick="addExpenseCat()">＋ カテゴリー追加</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -508,6 +535,10 @@ let state = {
   assetRecords: {},  // { "YYYY-MM-DD": {total, values} }
   lastAssetUpdate: null,
   chartYear:    TODAY.getFullYear(),
+  expenseCategories: ['食費','交通費','娯楽費','通信費','その他'],
+  expenses: {},
+  expSelYear: TODAY.getFullYear(),
+  expSelMonth: TODAY.getMonth()+1,
 };
 function load() {
   try {
@@ -541,7 +572,7 @@ function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function switchTab(tab) {
   state.activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach((b,i) =>
-    b.classList.toggle('active', (i===0&&tab==='cal')||(i===1&&tab==='asset'))
+    b.classList.toggle('active', (i===0&&tab==='cal')||(i===1&&tab==='asset')||(i===2&&tab==='expense'))
   );
   document.querySelectorAll('.tab-panel').forEach(p =>
     p.classList.toggle('active', p.id==='panel-'+tab)
@@ -553,6 +584,12 @@ function switchTab(tab) {
     renderCatList();
     renderAssetMonthSel();
     renderChart();
+  }
+  if(tab==='expense'){
+    state.expSelYear=TODAY.getFullYear();
+    state.expSelMonth=TODAY.getMonth()+1;
+    save();
+    renderExpensePanel();
   }
 }
 
@@ -608,11 +645,27 @@ function editDailyPnl(key, label) {
 function closePnlModal() {
   document.getElementById('pnl-modal').classList.remove('open');
   _editKey = null;
+  _expCatIdx = -1;
 }
 function pnlModalBgClick(e) {
   if (e.target === document.getElementById('pnl-modal')) closePnlModal();
 }
 function confirmPnlModal() {
+  if (_expCatIdx >= 0) {
+    const val=parseFloat(document.getElementById('pnl-modal-input').value.replace(/[,，]/g,'').replace(/[−ー]/g,'-'));
+    if(!isNaN(val)&&val>0){
+      const y=state.expSelYear,m=state.expSelMonth;
+      const key=`${y}-${String(m).padStart(2,'0')}`;
+      if(!state.expenses)state.expenses={};
+      if(!state.expenses[key])state.expenses[key]={};
+      const cat=state.expenseCategories[_expCatIdx];
+      state.expenses[key][cat]=(state.expenses[key][cat]||0)+val;
+      save();
+    }
+    closePnlModal();
+    renderExpensePanel();
+    return;
+  }
   if (_editKey === null) return;
   setDailyPnl(_editKey, document.getElementById('pnl-modal-input').value);
   closePnlModal();
@@ -1047,6 +1100,70 @@ function renderChart(){
     ctx.fillText(yen(v),x,y-5);
   });
 }
+// ============================================================
+// 支出管理
+// ============================================================
+let _expCatIdx = -1;
+
+function renderExpensePanel(){
+  const y=state.expSelYear,m=state.expSelMonth;
+  const lbl=document.getElementById('exp-month-lbl');
+  if(lbl)lbl.textContent=y+'年'+m+'月';
+  const key=y+'-'+String(m).padStart(2,'00'.length);
+  const monthExp=(state.expenses&&state.expenses[key])||{};
+  const cats=state.expenseCategories||[];
+  let total=0;
+  let html='';
+  cats.forEach((cat,i)=>{
+    const amt=monthExp[cat]||0;
+    total+=amt;
+    const esc=escHtml(cat);
+    html+='<div class="exp-row"><div class="exp-row-name">'+esc+'</div><div class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</div><button class="exp-row-add" onclick="openExpModal('+i+')">＋</button><button class="exp-row-del" onclick="delExpCat('+i+')">×</button></div>';
+  });
+  if(cats.length>0){
+    html+='<div class="exp-total-row"><span>合計</span><span>'+(total>0?yen(total):'—')+'</span></div>';
+  } else {
+    html='<div style="text-align:center;color:#bbb;padding:20px 0;font-size:13px">カテゴリーを追加してください</div>';
+  }
+  const list=document.getElementById('exp-cat-list');
+  if(list)list.innerHTML=html;
+}
+
+function changeExpMonth(d){
+  state.expSelMonth+=d;
+  if(state.expSelMonth>12){state.expSelMonth=1;state.expSelYear++;}
+  if(state.expSelMonth<1){state.expSelMonth=12;state.expSelYear--;}
+  save();renderExpensePanel();
+}
+
+function openExpModal(catIdx){
+  _expCatIdx=catIdx;
+  const cat=state.expenseCategories[catIdx];
+  document.getElementById('pnl-modal-title').textContent=escHtml(cat)+'に追加';
+  document.getElementById('pnl-modal-input').value='';
+  document.getElementById('pnl-modal-input').placeholder='例: 3000';
+  document.getElementById('pnl-modal').classList.add('open');
+  setTimeout(()=>{document.getElementById('pnl-modal-input').focus();},80);
+}
+
+function addExpenseCat(){
+  const name=prompt('カテゴリー名を入力');
+  if(!name||!name.trim())return;
+  const cat=name.trim();
+  if(!state.expenseCategories)state.expenseCategories=[];
+  if(state.expenseCategories.includes(cat)){alert('同じ名前のカテゴリーが既にあります');return;}
+  state.expenseCategories.push(cat);
+  save();renderExpensePanel();
+}
+
+function delExpCat(i){
+  const cat=state.expenseCategories[i];
+  if(!confirm('「'+cat+'」を削除しますか？'))return;
+  state.expenseCategories.splice(i,1);
+  Object.values(state.expenses||{}).forEach(mo=>delete mo[cat]);
+  save();renderExpensePanel();
+}
+
 function shortYen(v){return(v<0?'-':'')+'¥'+Math.round(Math.abs(v)).toLocaleString('ja-JP');}
 
 // ============================================================
