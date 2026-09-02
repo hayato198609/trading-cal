@@ -1233,7 +1233,7 @@ function renderExpCalHtml(y,m){
     html+='<div class="'+cls+'" data-expdate="'+ds+'" onclick="openExpDayDetail(\'' +ds+ '\')">';
     html+='<span class="exp-cal-day-num">'+d+'</span>';
     if(dayTotal>0){
-      var disp=dayTotal>=10000?Math.round(dayTotal/1000)+'k':'¥'+dayTotal;
+      var disp='¥'+Math.round(dayTotal);
       html+='<span class="exp-cal-day-amt">'+disp+'</span>';
     }
     html+='</div>';
@@ -1297,7 +1297,7 @@ function updateExpCalCell(ds){
   var dayTotal=Object.values(dayExp).reduce(function(a,b){return a+b;},0);
   var amtEl=cell.querySelector('.exp-cal-day-amt');
   if(dayTotal>0){
-    var disp=dayTotal>=10000?Math.round(dayTotal/1000)+'k':'¥'+dayTotal;
+    var disp='¥'+Math.round(dayTotal);
     if(!amtEl){amtEl=document.createElement('span');amtEl.className='exp-cal-day-amt';cell.appendChild(amtEl);}
     amtEl.textContent=disp;
   } else {
