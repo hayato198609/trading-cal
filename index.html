@@ -1287,8 +1287,23 @@ function setDailyExpCat(ds,catIdx,value){
     delete state.dailyExpenses[ds][cat];
     if(Object.keys(state.dailyExpenses[ds]).length===0)delete state.dailyExpenses[ds];
   }
+  var monthKey=ds.slice(0,7);
+  var monthTotal=0;
+  Object.keys(state.dailyExpenses||{}).forEach(function(d){
+    if(d.slice(0,7)===monthKey)monthTotal+=(state.dailyExpenses[d][cat]||0);
+  });
+  if(!state.expenses)state.expenses={};
+  if(!state.expenses[monthKey])state.expenses[monthKey]={};
+  if(monthTotal>0){state.expenses[monthKey][cat]=monthTotal;}else{delete state.expenses[monthKey][cat];if(!Object.keys(state.expenses[monthKey]).length)delete state.expenses[monthKey];}
   save();
   updateExpCalCell(ds);
+  var cats=state.expenseCategories||[];
+  var catIdx2=cats.indexOf(cat);
+  if(catIdx2>=0){var row=document.getElementById('exp-row-'+catIdx2);if(row){var amtEl=row.querySelector('.exp-row-amt');if(amtEl)amtEl.textContent=monthTotal>0?yen(monthTotal):'—';}}
+  var monthExp=(state.expenses&&state.expenses[monthKey])||{};
+  var total=0;cats.forEach(function(c){total+=(monthExp[c]||0);});
+  var totalSpans=document.querySelectorAll('.exp-total-row span');
+  if(totalSpans.length>1)totalSpans[totalSpans.length-1].textContent=total>0?yen(total):'—';
 }
 function updateExpCalCell(ds){
   var cell=document.querySelector('[data-expdate="'+ds+'"]');
