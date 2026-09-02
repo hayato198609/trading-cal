@@ -371,22 +371,6 @@ canvas#assetChart { width: 100%; display: block; }
 .exp-add-cat-btn{background:none;border:1.5px dashed #bbb;color:#888;padding:8px 24px;border-radius:20px;font-size:13px;cursor:pointer;}
 .exp-drag-handle{width:22px;font-size:16px;color:#ccc;cursor:grab;user-select:none;text-align:center;flex-shrink:0;touch-action:none;padding:0 2px;}
 .exp-drag-handle:active{cursor:grabbing;color:#888;}
-.exp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;}
-.exp-cal-hdr{text-align:center;font-size:10px;font-weight:700;color:#888;padding:2px 0;}
-.exp-cal-day{border-radius:6px;padding:3px 2px;min-height:40px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;background:#fafafa;border:1px solid #f0f0f0;box-sizing:border-box;}
-.exp-cal-day:active{background:#ebe8ff;}
-.exp-cal-today{border-color:#6366f1!important;background:#f0f0ff!important;}
-.exp-cal-sel{border-color:#6366f1!important;background:#eeeeff!important;box-shadow:0 0 0 1.5px #6366f1;}
-.exp-cal-day-num{font-size:11px;font-weight:600;color:#1a1a2e;}
-.exp-cal-day-amt{font-size:9px;color:#6366f1;font-weight:700;text-align:center;line-height:1.2;}
-.exp-cal-day-empty{min-height:40px;}
-.exp-day-panel{background:#f8f8ff;border:1.5px solid #e8e0ff;border-radius:10px;padding:12px;margin-bottom:10px;}
-.exp-day-panel-title{font-size:13px;font-weight:700;color:#6366f1;margin-bottom:10px;}
-.exp-day-cat-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0f0;}
-.exp-day-cat-row:last-child{border-bottom:none;}
-.exp-day-cat-name{flex:1;font-size:13px;font-weight:600;color:#1a1a2e;}
-.exp-day-cat-input{flex:0 0 90px;width:90px;border:1.5px solid #e0e0e0;border-radius:8px;padding:6px 6px;font-size:13px;font-weight:600;text-align:right;outline:none;background:#fff;-webkit-appearance:none;box-sizing:border-box;}
-.exp-day-cat-input:focus{border-color:#6366f1;}
 .cat-item.exp-drag-target{border-top:2.5px solid #1a1a2e;}
 
 @media (max-width: 600px) {
@@ -555,7 +539,6 @@ let state = {
   chartYear:    TODAY.getFullYear(),
   expenseCategories: ['食費','交通費','娯楽費','通信費','その他'],
   expenses: {},
-  dailyExpenses: {},
   expSelYear: TODAY.getFullYear(),
   expSelMonth: TODAY.getMonth()+1,
 };
@@ -1185,7 +1168,6 @@ function renderChart(){
 // 支出管理
 // ============================================================
 let _expCatIdx = -1;
-let _expSelDate = null;
 let _expDragIdx=-1,_expDragOverIdx=-1,_expDragActive=false,_expDragTimer=null,_expDragClone=null,_expDragStartY=0,_expDragCloneTop=0;
 
 function renderExpensePanel(){
@@ -1208,97 +1190,8 @@ function renderExpensePanel(){
   } else {
     html='<div style="text-align:center;color:#bbb;padding:20px 0;font-size:13px">カテゴリーを追加してください</div>';
   }
-  html+=renderExpCalHtml(y,m);
-  html+='<div id="exp-day-panel"></div>';
   const list=document.getElementById('exp-cat-list');
-  if(list){list.innerHTML=html;renderExpDayPanel();}
-}
-
-function renderExpCalHtml(y,m){
-  const today=TODAY;
-  const firstDay=new Date(y,m-1,1).getDay();
-  const daysInMonth=new Date(y,m,0).getDate();
-  const dow=['日','月','火','水','木','金','土'];
-  let html='<div style="margin-top:16px;font-size:12px;font-weight:700;color:#888;margin-bottom:6px">日別支出</div>';
-  html+='<div class="exp-cal-grid">';
-  dow.forEach(d=>{html+='<div class="exp-cal-hdr">'+d+'</div>';});
-  for(let i=0;i<firstDay;i++){html+='<div class="exp-cal-day-empty"></div>';}
-  for(let d=1;d<=daysInMonth;d++){
-    const ds=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const dayExp=(state.dailyExpenses&&state.dailyExpenses[ds])||{};
-    const dayTotal=Object.values(dayExp).reduce((a,b)=>a+b,0);
-    const isToday=(y===today.getFullYear()&&m===today.getMonth()+1&&d===today.getDate());
-    const isSel=(_expSelDate===ds);
-    html+='<div class="exp-cal-day'+(isToday?' exp-cal-today':'')+(isSel?' exp-cal-sel':'')+'" data-expdate="'+ds+'" onclick="openExpDayDetail(''+ds+'')">';
-    html+='<span class="exp-cal-day-num">'+d+'</span>';
-    if(dayTotal>0){
-      const disp=dayTotal>=10000?Math.round(dayTotal/1000)+'k':'¥'+dayTotal;
-      html+='<span class="exp-cal-day-amt">'+disp+'</span>';
-    }
-    html+='</div>';
-  }
-  html+='</div>';
-  return html;
-}
-function renderExpDayPanel(){
-  const panel=document.getElementById('exp-day-panel');
-  if(!panel)return;
-  if(!_expSelDate){panel.innerHTML='';return;}
-  const parts=_expSelDate.split('-');
-  const dayExp=(state.dailyExpenses&&state.dailyExpenses[_expSelDate])||{};
-  const cats=state.expenseCategories||[];
-  let html='<div class="exp-day-panel">';
-  html+='<div class="exp-day-panel-title">'+parseInt(parts[1])+'月'+parseInt(parts[2])+'日</div>';
-  cats.forEach((cat,i)=>{
-    const val=dayExp[cat]||'';
-    const esc=escHtml(cat);
-    html+='<div class="exp-day-cat-row">';
-    html+='<span class="exp-day-cat-name">'+esc+'</span>';
-    html+='<input class="exp-day-cat-input" type="text" inputmode="numeric" value="'+val+'" placeholder="0" oninput="setDailyExpCat(''+_expSelDate+'','+i+',this.value)" onfocus="this.select()">';
-    html+='</div>';
-  });
-  html+='</div>';
-  panel.innerHTML=html;
-}
-function openExpDayDetail(ds){
-  document.querySelectorAll('.exp-cal-sel').forEach(el=>el.classList.remove('exp-cal-sel'));
-  if(_expSelDate===ds){
-    _expSelDate=null;
-  } else {
-    _expSelDate=ds;
-    const cell=document.querySelector('[data-expdate="'+ds+'"]');
-    if(cell)cell.classList.add('exp-cal-sel');
-  }
-  renderExpDayPanel();
-}
-function setDailyExpCat(ds,catIdx,value){
-  const val=parseFloat(String(value).replace(/[,，]/g,'').replace(/[−ー]/g,'-'));
-  const cat=(state.expenseCategories||[])[catIdx];
-  if(cat===undefined)return;
-  if(!state.dailyExpenses)state.dailyExpenses={};
-  if(!state.dailyExpenses[ds])state.dailyExpenses[ds]={};
-  if(!isNaN(val)&&val>0){
-    state.dailyExpenses[ds][cat]=val;
-  } else {
-    delete state.dailyExpenses[ds][cat];
-    if(Object.keys(state.dailyExpenses[ds]).length===0)delete state.dailyExpenses[ds];
-  }
-  save();
-  updateExpCalCell(ds);
-}
-function updateExpCalCell(ds){
-  const cell=document.querySelector('[data-expdate="'+ds+'"]');
-  if(!cell)return;
-  const dayExp=(state.dailyExpenses&&state.dailyExpenses[ds])||{};
-  const dayTotal=Object.values(dayExp).reduce((a,b)=>a+b,0);
-  let amtEl=cell.querySelector('.exp-cal-day-amt');
-  if(dayTotal>0){
-    const disp=dayTotal>=10000?Math.round(dayTotal/1000)+'k':'¥'+dayTotal;
-    if(!amtEl){amtEl=document.createElement('span');amtEl.className='exp-cal-day-amt';cell.appendChild(amtEl);}
-    amtEl.textContent=disp;
-  } else {
-    if(amtEl)amtEl.remove();
-  }
+  if(list)list.innerHTML=html;
 }
 
 function changeExpMonth(d){
@@ -1344,7 +1237,6 @@ function delExpCat(i){
   if(!confirm('「'+cat+'」を削除しますか？'))return;
   state.expenseCategories.splice(i,1);
   Object.values(state.expenses||{}).forEach(mo=>delete mo[cat]);
-  Object.values(state.dailyExpenses||{}).forEach(day=>delete day[cat]);
   save();renderExpensePanel();
 }
 
