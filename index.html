@@ -726,8 +726,9 @@ function expDragEnd(){
     state.expenseCategories=cats;
     var typs=(state.expenseCatTypes||[]).slice();
     while(typs.length<cats.length)typs.push('var');
-    var titem=typs.splice(_expDragIdx,1)[0];
-    typs.splice(_expDragOverIdx,0,titem);
+    var targetType=typs[_expDragOverIdx]||'var';
+    typs.splice(_expDragIdx,1);
+    typs.splice(_expDragOverIdx,0,targetType);
     state.expenseCatTypes=typs;save();
   }
   expDragCleanup();
