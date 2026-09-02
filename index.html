@@ -1201,7 +1201,7 @@ function renderExpensePanel(){
     const amt=monthExp[cat]||0;
     total+=amt;
     const esc=escHtml(cat);
-    html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')"><div class="cat-row"><span class="cat-name-btn" style="cursor:default;text-decoration:none">'+esc+'</span><span class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</span><button class="exp-row-add" onclick="openExpModal('+i+')">＋</button><button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div></div>';
+    html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')"><div class="cat-row"><span class="cat-name-btn" style="cursor:default;text-decoration:none">'+esc+'</span><span class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</span><button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div></div>';
   });
   if(cats.length>0){
     html+='<div class="exp-total-row"><span>合計</span><span>'+(total>0?yen(total):'—')+'</span></div>';
