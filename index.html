@@ -371,15 +371,6 @@ canvas#assetChart { width: 100%; display: block; }
 .exp-add-cat-btn{background:none;border:1.5px dashed #bbb;color:#888;padding:8px 24px;border-radius:20px;font-size:13px;cursor:pointer;}
 .exp-drag-handle{width:22px;font-size:16px;color:#ccc;cursor:grab;user-select:none;text-align:center;flex-shrink:0;touch-action:none;padding:0 2px;}
 .exp-drag-handle:active{cursor:grabbing;color:#888;}
-.exp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:16px;}
-.exp-cal-hdr{text-align:center;font-size:10px;font-weight:700;color:#888;padding:2px 0;}
-.exp-cal-day{border-radius:6px;padding:3px 2px;min-height:40px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;background:#fafafa;border:1px solid #f0f0f0;box-sizing:border-box;}
-.exp-cal-day:active{background:#ebe8ff;}
-.exp-cal-today{border-color:#6366f1!important;background:#f0f0ff!important;}
-.exp-cal-day-num{font-size:11px;font-weight:600;color:#1a1a2e;}
-.exp-cal-day-amt{font-size:9px;color:#6366f1;font-weight:700;text-align:center;line-height:1.2;word-break:break-all;}
-.exp-cal-day-empty{min-height:40px;}
-.exp-modal-cat-sel{width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:10px;box-sizing:border-box;background:#fafafa;outline:none;display:block;}
 .cat-item.exp-drag-target{border-top:2.5px solid #1a1a2e;}
 
 @media (max-width: 600px) {
@@ -548,7 +539,6 @@ let state = {
   chartYear:    TODAY.getFullYear(),
   expenseCategories: ['食費','交通費','娯楽費','通信費','その他'],
   expenses: {},
-  dailyExpenses: {},
   expSelYear: TODAY.getFullYear(),
   expSelMonth: TODAY.getMonth()+1,
 };
@@ -654,13 +644,10 @@ function editDailyPnl(key, label) {
   document.getElementById('pnl-modal').classList.add('open');
   setTimeout(() => { inp.focus(); inp.select(); }, 80);
 }
-function closePnlModal(){
+function closePnlModal() {
   document.getElementById('pnl-modal').classList.remove('open');
-  _editKey=null;
-  _expCatIdx=-1;
-  _expModalDate=null;
-  const sel=document.getElementById('pnl-modal-cat-sel');
-  if(sel)sel.parentNode.removeChild(sel);
+  _editKey = null;
+  _expCatIdx = -1;
 }
 function expDragStart(e,idx){
   if(e.target.tagName==='BUTTON')return;
@@ -727,34 +714,12 @@ function expDragCleanup(){
 function pnlModalBgClick(e) {
   if (e.target === document.getElementById('pnl-modal')) closePnlModal();
 }
-function confirmPnlModal(){
-  if(_expModalDate!==null){
-    const val=parseFloat(document.getElementById('pnl-modal-input').value.replace(/[,，]/g,'').replace(/[−ー]/g,'-'));
-    if(!isNaN(val)&&val>0){
-      const sel=document.getElementById('pnl-modal-cat-sel');
-      const catIdx=sel?parseInt(sel.value):0;
-      const cat=(state.expenseCategories||[])[catIdx];
-      if(cat!==undefined){
-        if(!state.dailyExpenses)state.dailyExpenses={};
-        if(!state.dailyExpenses[_expModalDate])state.dailyExpenses[_expModalDate]={};
-        state.dailyExpenses[_expModalDate][cat]=(state.dailyExpenses[_expModalDate][cat]||0)+val;
-        const parts=_expModalDate.split('-');
-        const mkey=parts[0]+'-'+parts[1];
-        if(!state.expenses)state.expenses={};
-        if(!state.expenses[mkey])state.expenses[mkey]={};
-        state.expenses[mkey][cat]=(state.expenses[mkey][cat]||0)+val;
-        save();
-      }
-    }
-    closePnlModal();
-    renderExpensePanel();
-    return;
-  }
-  if(_expCatIdx>=0){
+function confirmPnlModal() {
+  if (_expCatIdx >= 0) {
     const val=parseFloat(document.getElementById('pnl-modal-input').value.replace(/[,，]/g,'').replace(/[−ー]/g,'-'));
     if(!isNaN(val)&&val>0){
       const y=state.expSelYear,m=state.expSelMonth;
-      const key=y+'-'+String(m).padStart(2,'0');
+      const key=`${y}-${String(m).padStart(2,'0')}`;
       if(!state.expenses)state.expenses={};
       if(!state.expenses[key])state.expenses[key]={};
       const cat=state.expenseCategories[_expCatIdx];
@@ -765,8 +730,8 @@ function confirmPnlModal(){
     renderExpensePanel();
     return;
   }
-  if(_editKey===null)return;
-  setDailyPnl(_editKey,document.getElementById('pnl-modal-input').value);
+  if (_editKey === null) return;
+  setDailyPnl(_editKey, document.getElementById('pnl-modal-input').value);
   closePnlModal();
 }
 function clearPnlModal() {
@@ -1203,8 +1168,6 @@ function renderChart(){
 // 支出管理
 // ============================================================
 let _expCatIdx = -1;
-let _expCatYears = {};
-let _expModalDate = null;
 let _expDragIdx=-1,_expDragOverIdx=-1,_expDragActive=false,_expDragTimer=null,_expDragClone=null,_expDragStartY=0,_expDragCloneTop=0;
 
 function renderExpensePanel(){
@@ -1220,130 +1183,17 @@ function renderExpensePanel(){
     const amt=monthExp[cat]||0;
     total+=amt;
     const esc=escHtml(cat);
-    const cid='exp-cat-chart-'+i;
-    html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')">';
-    html+='<div class="cat-row"><span class="cat-name-btn" onclick="toggleExpCatChart(''+esc+'',''+cid+'')">'+esc+' ▾</span>';
-    html+='<span class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</span>';
-    html+='<button class="exp-row-add" onclick="openExpModal('+i+')">＋</button>';
-    html+='<button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div>';
-    html+='<div class="cat-inline-chart" id="'+cid+'">';
-    html+='<div class="cat-inline-nav"><button class="cat-inline-nav-btn" onclick="expCatYearChange(''+esc+'',''+cid+'',-1)">‹</button>';
-    html+='<span id="'+cid+'-lbl"></span>';
-    html+='<button class="cat-inline-nav-btn" onclick="expCatYearChange(''+esc+'',''+cid+'',+1)">›</button></div>';
-    html+='<canvas id="'+cid+'-canvas" height="160" style="width:100%;display:block"></canvas>';
-    html+='<div id="'+cid+'-nodata" class="cat-inline-no-data" style="display:none">記録がありません</div></div></div>';
+    html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')"><div class="cat-row"><span class="cat-name-btn" style="cursor:default;text-decoration:none">'+esc+'</span><span class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</span><button class="exp-row-add" onclick="openExpModal('+i+')">＋</button><button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div></div>';
   });
   if(cats.length>0){
     html+='<div class="exp-total-row"><span>合計</span><span>'+(total>0?yen(total):'—')+'</span></div>';
   } else {
     html='<div style="text-align:center;color:#bbb;padding:20px 0;font-size:13px">カテゴリーを追加してください</div>';
   }
-  html+=renderExpCalHtml(y,m);
   const list=document.getElementById('exp-cat-list');
   if(list)list.innerHTML=html;
 }
-function toggleExpCatChart(cat,cid){
-  const panel=document.getElementById(cid);
-  if(!panel)return;
-  const isOpen=panel.classList.toggle('open');
-  if(isOpen){
-    if(!_expCatYears[cat])_expCatYears[cat]=TODAY.getFullYear();
-    renderExpCatChart(cat,cid);
-  }
-}
-function expCatYearChange(cat,cid,delta){
-  _expCatYears[cat]=(_expCatYears[cat]||TODAY.getFullYear())+delta;
-  renderExpCatChart(cat,cid);
-}
-function renderExpCatChart(cat,cid){
-  const y=_expCatYears[cat]||TODAY.getFullYear();
-  const lbl=document.getElementById(cid+'-lbl');
-  const canvas=document.getElementById(cid+'-canvas');
-  const noData=document.getElementById(cid+'-nodata');
-  if(!canvas)return;
-  if(lbl)lbl.textContent=y+'年';
-  const months=Array.from({length:12},(_,i)=>i+1);
-  const vals=months.map(mo=>{
-    const k=y+'-'+String(mo).padStart(2,'0');
-    const exp=(state.expenses&&state.expenses[k])||{};
-    return exp[cat]||null;
-  });
-  if(!vals.some(v=>v!==null&&v!==0)){
-    canvas.style.display='none';noData.style.display='block';return;
-  }
-  canvas.style.display='block';noData.style.display='none';
-  const W=canvas.parentElement.clientWidth-4,H=160;
-  canvas.width=W;canvas.height=H;
-  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
-  const PAD={top:22,right:14,bottom:30,left:6};
-  const cW=W-PAD.left-PAD.right,cH=H-PAD.top-PAD.bottom;
-  const dv=vals.filter(v=>v!==null&&v!==0);
-  let maxV=Math.max(...dv);
-  if(!maxV||maxV<=0){maxV=1000;}else{maxV=maxV*1.2;}
-  const barW=cW/12*0.62;
-  const xCenter=mo=>PAD.left+((mo-0.5)/12)*cW;
-  const yOf=v=>PAD.top+(1-v/maxV)*cH;
-  const base=PAD.top+cH;
-  ctx.fillStyle='#bbb';ctx.font='9px sans-serif';ctx.textAlign='center';
-  months.forEach(mo=>ctx.fillText(mo+'月',xCenter(mo),H-PAD.bottom+12));
-  const col='#6366f1';
-  vals.forEach((v,idx)=>{
-    if(v===null||v===0)return;
-    const mo=idx+1,x=xCenter(mo),yv=yOf(v);
-    ctx.fillStyle=col;
-    const r=2;
-    ctx.beginPath();
-    ctx.moveTo(x-barW/2+r,yv);ctx.lineTo(x+barW/2-r,yv);ctx.arcTo(x+barW/2,yv,x+barW/2,yv+r,r);
-    ctx.lineTo(x+barW/2,base);ctx.lineTo(x-barW/2,base);ctx.lineTo(x-barW/2,yv+r);
-    ctx.arcTo(x-barW/2,yv,x-barW/2+r,yv,r);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#333';ctx.font='bold 8px sans-serif';ctx.textAlign='center';
-    ctx.fillText(yen(v),x,yv-4);
-  });
-}
-function renderExpCalHtml(y,m){
-  const today=TODAY;
-  const firstDay=new Date(y,m-1,1).getDay();
-  const daysInMonth=new Date(y,m,0).getDate();
-  const dow=['日','月','火','水','木','金','土'];
-  let html='<div style="margin-top:16px;font-size:12px;font-weight:700;color:#888;margin-bottom:6px">日別支出</div>';
-  html+='<div class="exp-cal-grid">';
-  dow.forEach(d=>{html+='<div class="exp-cal-hdr">'+d+'</div>';});
-  for(let i=0;i<firstDay;i++){html+='<div class="exp-cal-day-empty"></div>';}
-  for(let d=1;d<=daysInMonth;d++){
-    const dateStr=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const dayExp=(state.dailyExpenses&&state.dailyExpenses[dateStr])||{};
-    const dayTotal=Object.values(dayExp).reduce((a,b)=>a+b,0);
-    const isToday=(y===today.getFullYear()&&m===today.getMonth()+1&&d===today.getDate());
-    const disp=dayTotal>=10000?Math.round(dayTotal/1000)+'k':dayTotal>0?'¥'+dayTotal:'';
-    html+='<div class="exp-cal-day'+(isToday?' exp-cal-today':'')+'" onclick="openExpDayModal(''+dateStr+'')">';
-    html+='<span class="exp-cal-day-num">'+d+'</span>';
-    if(disp)html+='<span class="exp-cal-day-amt">'+disp+'</span>';
-    html+='</div>';
-  }
-  html+='</div>';
-  return html;
-}
-function openExpDayModal(dateStr){
-  _expModalDate=dateStr;
-  _expCatIdx=-1;
-  const parts=dateStr.split('-');
-  const cats=state.expenseCategories||[];
-  document.getElementById('pnl-modal-title').textContent=parts[1]+'月'+parseInt(parts[2])+'日の支出を追加';
-  let sel=document.getElementById('pnl-modal-cat-sel');
-  if(!sel){
-    sel=document.createElement('select');
-    sel.className='exp-modal-cat-sel';
-    sel.id='pnl-modal-cat-sel';
-    const inp=document.getElementById('pnl-modal-input');
-    inp.parentNode.insertBefore(sel,inp);
-  }
-  sel.innerHTML='';
-  cats.forEach((cat,i)=>{const o=document.createElement('option');o.value=i;o.textContent=cat;sel.appendChild(o);});
-  document.getElementById('pnl-modal-input').value='';
-  document.getElementById('pnl-modal-input').placeholder='例: 3000';
-  document.getElementById('pnl-modal').classList.add('open');
-  setTimeout(()=>{document.getElementById('pnl-modal-input').focus();},80);
-}
+
 function changeExpMonth(d){
   state.expSelMonth+=d;
   if(state.expSelMonth>12){state.expSelMonth=1;state.expSelYear++;}
@@ -1364,16 +1214,14 @@ function setExpCatAmt(idx,value){
 }
 function openExpModal(catIdx){
   _expCatIdx=catIdx;
-  _expModalDate=null;
   const cat=state.expenseCategories[catIdx];
   document.getElementById('pnl-modal-title').textContent=escHtml(cat)+'に追加';
-  const sel=document.getElementById('pnl-modal-cat-sel');
-  if(sel)sel.parentNode.removeChild(sel);
   document.getElementById('pnl-modal-input').value='';
   document.getElementById('pnl-modal-input').placeholder='例: 3000';
   document.getElementById('pnl-modal').classList.add('open');
   setTimeout(()=>{document.getElementById('pnl-modal-input').focus();},80);
 }
+
 function addExpenseCat(){
   const name=prompt('カテゴリー名を入力');
   if(!name||!name.trim())return;
@@ -1389,7 +1237,6 @@ function delExpCat(i){
   if(!confirm('「'+cat+'」を削除しますか？'))return;
   state.expenseCategories.splice(i,1);
   Object.values(state.expenses||{}).forEach(mo=>delete mo[cat]);
-  Object.values(state.dailyExpenses||{}).forEach(day=>delete day[cat]);
   save();renderExpensePanel();
 }
 
