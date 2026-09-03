@@ -700,7 +700,20 @@ function expDragStart(e,idx){
 function expDragMove(e){
   var clientY=e.touches?e.touches[0].clientY:e.clientY;
   if(!_expDragActive){
-    if(Math.abs(clientY-_expDragStartY)>8){clearTimeout(_expDragTimer);expDragCleanup();}
+    if(Math.abs(clientY-_expDragStartY)>10&&_expDragIdx>=0){
+      clearTimeout(_expDragTimer);
+      var row2=document.getElementById('exp-row-'+_expDragIdx);
+      if(row2){
+        _expDragActive=true;
+        var rect2=row2.getBoundingClientRect();
+        _expDragClone=row2.cloneNode(true);
+        _expDragClone.removeAttribute('id');
+        _expDragClone.style.cssText='position:fixed;left:'+rect2.left+'px;top:'+rect2.top+'px;width:'+rect2.width+'px;z-index:999;opacity:0.9;box-shadow:0 6px 20px rgba(0,0,0,0.18);border-radius:8px;pointer-events:none;background:#fff;';
+        _expDragCloneTop=rect2.top;
+        document.body.appendChild(_expDragClone);
+        row2.style.opacity='0.3';
+      } else { expDragCleanup(); }
+    }
     return;
   }
   e.preventDefault();
