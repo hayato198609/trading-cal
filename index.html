@@ -677,7 +677,6 @@ function closePnlModal() {
 }
 function expDragStart(e,idx){
   if(e.target.tagName==='BUTTON')return;
-  e.preventDefault();
   _expDragIdx=idx;_expDragActive=false;_expDragOverIdx=idx;
   _expDragStartY=e.touches?e.touches[0].clientY:e.clientY;
   _expDragTimer=setTimeout(function(){
