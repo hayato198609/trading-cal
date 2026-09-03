@@ -1324,15 +1324,19 @@ function renderExpDayPanel(){
   var html='<div class="exp-day-panel">';
   html+='<div class="exp-day-panel-title">'+parseInt(parts[1])+'月'+parseInt(parts[2])+'日</div>';
   var sel=_expSelDate;
-  cats.forEach(function(cat,i){
-    var val=dayExp[cat]||'';
-    var esc=escHtml(cat);
-    html+='<div class="exp-day-cat-row">';
-    html+='<span class="exp-day-cat-name">'+esc+'</span>';
-    html+='<input class="exp-day-cat-input" type="text" inputmode="numeric" value="'+val+'" placeholder="0"';
-    html+=' oninput="setDailyExpCat(\'' +sel+ '\',' +i+ ',this.value)"';
-    html+=' onfocus="this.select()">';
-    html+='</div>';
+  var types=state.expenseCatTypes||[];
+  (state.expFixedFirst===false?['var','fixed']:['fixed','var']).forEach(function(tp){
+    cats.forEach(function(cat,i){
+      if((types[i]||'var')!==tp)return;
+      var val=dayExp[cat]||'';
+      var esc=escHtml(cat);
+      html+='<div class="exp-day-cat-row">';
+      html+='<span class="exp-day-cat-name">'+esc+'</span>';
+      html+='<input class="exp-day-cat-input" type="text" inputmode="numeric" value="'+val+'" placeholder="0"';
+      html+=' oninput="setDailyExpCat('' +sel+ '',' +i+ ',this.value)"';
+      html+=' onfocus="this.select()">';
+      html+='</div>';
+    });
   });
   html+='</div>';
   panel.innerHTML=html;
