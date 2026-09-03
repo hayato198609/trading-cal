@@ -376,6 +376,8 @@ canvas#assetChart { width: 100%; display: block; }
 .exp-type-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;cursor:pointer;flex-shrink:0;border:1px solid;user-select:none;-webkit-user-select:none;}
 .exp-type-fixed{background:#fff0f0;color:#e74c3c;border-color:#fca5a5;}
 .exp-type-var{background:#f0f0ff;color:#6366f1;border-color:#c7d2fe;}
+.exp-sec-swap{float:right;background:none;border:none;font-size:15px;cursor:pointer;color:#aaa;padding:0 2px;line-height:1;margin-top:-1px;}
+.exp-sec-swap:active{color:#6366f1;}
 .exp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;}
 .exp-cal-hdr{text-align:center;font-size:10px;font-weight:700;color:#888;padding:2px 0;}
 .exp-cal-day{border-radius:6px;padding:3px 2px;min-height:40px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;background:#fafafa;border:1px solid #f0f0f0;box-sizing:border-box;}
@@ -562,6 +564,7 @@ let state = {
   expenses: {},
   dailyExpenses: {},
   expenseCatTypes: [],
+  expFixedFirst: true,
   expSelYear: TODAY.getFullYear(),
   expSelMonth: TODAY.getMonth()+1,
 };
@@ -1216,8 +1219,8 @@ function renderExpensePanel(){
   let total=0;
   let html='';
   const types=state.expenseCatTypes||[];
-  ['fixed','var'].forEach(function(tp){
-    html+='<div class="exp-section-hdr" data-exptype="'+tp+'">'+(tp==='fixed'?'固定費':'変動費')+'</div>';
+  (state.expFixedFirst===false?['var','fixed']:['fixed','var']).forEach(function(tp){
+    html+='<div class="exp-section-hdr" data-exptype="'+tp+'"><span>'+(tp==='fixed'?'固定費':'変動費')+'</span><button class="exp-sec-swap" onclick="swapExpSections()">⇅</button></div>';
     var hasAny=false;
     cats.forEach((cat,i)=>{
       if((types[i]||'var')!==tp)return;
@@ -1400,6 +1403,10 @@ function toggleExpCatType(i){
   if(!state.expenseCatTypes)state.expenseCatTypes=[];
   while(state.expenseCatTypes.length<(state.expenseCategories||[]).length)state.expenseCatTypes.push('var');
   state.expenseCatTypes[i]=state.expenseCatTypes[i]==='fixed'?'var':'fixed';
+  save();renderExpensePanel();
+}
+function swapExpSections(){
+  state.expFixedFirst=state.expFixedFirst===false;
   save();renderExpensePanel();
 }
 
