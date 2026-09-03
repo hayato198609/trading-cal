@@ -378,6 +378,7 @@ canvas#assetChart { width: 100%; display: block; }
 .exp-type-var{background:#f0f0ff;color:#6366f1;border-color:#c7d2fe;}
 .exp-sec-swap{float:right;background:none;border:none;font-size:15px;cursor:pointer;color:#aaa;padding:0 2px;line-height:1;margin-top:-1px;}
 .exp-sec-swap:active{color:#6366f1;}
+.exp-section-total{display:flex;justify-content:space-between;padding:4px 8px 10px;font-size:12px;color:#888;font-weight:600;border-top:1px dashed #e0ddf8;}
 .exp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;}
 .exp-cal-hdr{text-align:center;font-size:10px;font-weight:700;color:#888;padding:2px 0;}
 .exp-cal-day{border-radius:6px;padding:3px 2px;min-height:40px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;background:#fafafa;border:1px solid #f0f0f0;box-sizing:border-box;}
@@ -1221,16 +1222,19 @@ function renderExpensePanel(){
   (state.expFixedFirst===false?['var','fixed']:['fixed','var']).forEach(function(tp){
     html+='<div class="exp-section-hdr" data-exptype="'+tp+'"><span>'+(tp==='fixed'?'固定費':'変動費')+'</span><button class="exp-sec-swap" onclick="swapExpSections()">⇅</button></div>';
     var hasAny=false;
+    var sectionTotal=0;
     cats.forEach((cat,i)=>{
       if((types[i]||'var')!==tp)return;
       hasAny=true;
       const amt=monthExp[cat]||0;
       total+=amt;
+      sectionTotal+=amt;
       const esc=escHtml(cat);
       const badge=tp==='fixed'?'固定':'変動';
       html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')"><div class="cat-row"><span class="exp-type-badge exp-type-'+tp+'" onclick="toggleExpCatType('+i+')">'+badge+'</span><span class="cat-name-btn" style="cursor:default;text-decoration:none">'+esc+'</span><span class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</span><button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div></div>';
     });
     if(!hasAny)html+='<div class="exp-section-empty" data-exptype="'+tp+'">—</div>';
+    html+='<div class="exp-section-total"><span>'+(tp==='fixed'?'固定費計':'変動費計')+'</span><span>'+(sectionTotal>0?yen(sectionTotal):'—')+'</span></div>';
   });
   if(cats.length>0){
     html+='<div class="exp-total-row"><span>合計</span><span>'+(total>0?yen(total):'—')+'</span></div>';
