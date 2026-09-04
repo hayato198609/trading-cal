@@ -1312,7 +1312,7 @@ function renderExpMonthTable(y){
     cats.forEach(function(cat,i){var amt=monthExp[cat]||0;if((types[i]||'var')==='fixed')fixedAmt+=amt;else varAmt+=amt;});
     var tot=fixedAmt+varAmt;
     var isCur=(m===state.expSelMonth);
-    html+='<tr'+(isCur?' class="exp-month-cur"':'')+'><td>'+m+'</td>';
+    html+='<tr'+(isCur?' class="exp-month-cur"':'')+'><td>'+m+'月</td>';
     html+='<td>'+(fixedAmt>0?yen(fixedAmt):'—')+'</td>';
     html+='<td>'+(varAmt>0?yen(varAmt):'—')+'</td>';
     html+='<td class="exp-mtot">'+(tot>0?yen(tot):'—')+'</td></tr>';
