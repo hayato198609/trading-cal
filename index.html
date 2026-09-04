@@ -1277,7 +1277,7 @@ function renderExpCalHtml(y,m){
   var firstDay=new Date(y,m-1,1).getDay();
   var daysInMonth=new Date(y,m,0).getDate();
   var dow=['日','月','火','水','木','金','土'];
-  html+='<div class="exp-cal-grid">';
+  var html='<div class="exp-cal-grid">';
   dow.forEach(function(d){html+='<div class="exp-cal-hdr">'+d+'</div>';});
   for(var i=0;i<firstDay;i++){html+='<div class="exp-cal-day-empty"></div>';}
   for(var d=1;d<=daysInMonth;d++){
