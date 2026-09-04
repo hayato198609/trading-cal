@@ -703,6 +703,7 @@ function expDragStart(e,idx){
   },400);
   document.addEventListener('touchmove',expDragMove,{passive:false});
   document.addEventListener('touchend',expDragEnd,{once:true});
+  document.addEventListener('touchcancel',expDragEnd,{once:true});
   document.addEventListener('mousemove',expDragMove);
   document.addEventListener('mouseup',expDragEnd,{once:true});
 }
@@ -736,6 +737,9 @@ function expDragEnd(){
   clearTimeout(_expDragTimer);
   document.removeEventListener('touchmove',expDragMove);
   document.removeEventListener('mousemove',expDragMove);
+  document.removeEventListener('touchend',expDragEnd);
+  document.removeEventListener('touchcancel',expDragEnd);
+  document.removeEventListener('mouseup',expDragEnd);
   if(_expDragActive&&_expDragIdx>=0&&(_expDragOverType||(_expDragOverIdx>=0&&_expDragOverIdx!==_expDragIdx))){
     var allRows=(document.getElementById('exp-cat-list')||document).querySelectorAll('.cat-item[data-idx]');
     var domOrder=Array.from(allRows).map(function(r){return parseInt(r.dataset.idx);});
