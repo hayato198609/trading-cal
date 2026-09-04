@@ -1,5 +1,3 @@
-<!DOCTYPE html
-  assetSelYear: TODAY.getFullYear(),
   assetSelMonth: TODAY.getMonth() + 1,>
 <html lang="ja">
 <head>
@@ -1279,7 +1277,6 @@ function renderExpCalHtml(y,m){
   var firstDay=new Date(y,m-1,1).getDay();
   var daysInMonth=new Date(y,m,0).getDate();
   var dow=['日','月','火','水','木','金','土'];
-  var html='<div style="margin-top:16px;font-size:12px;font-weight:700;color:#888;margin-bottom:6px">日別支出</div>';
   html+='<div class="exp-cal-grid">';
   dow.forEach(function(d){html+='<div class="exp-cal-hdr">'+d+'</div>';});
   for(var i=0;i<firstDay;i++){html+='<div class="exp-cal-day-empty"></div>';}
@@ -1304,8 +1301,8 @@ function renderExpCalHtml(y,m){
 function renderExpMonthTable(y){
   var cats=state.expenseCategories||[];
   var types=state.expenseCatTypes||[];
-  var html='<div class="exp-month-table-wrap"><div style="font-size:12px;font-weight:700;color:#888;margin-bottom:6px">月別サマリー</div>';
-  html+='<table class="exp-month-table"><thead><tr><th>月</th><th>固定費</th><th>変動費</th><th>合計</th></tr></thead><tbody>';
+  var html='<div class="exp-month-table-wrap">';
+  html+='<table class="exp-month-table"><thead><tr><th>固定費</th><th>変動費</th><th>合計</th></tr></thead><tbody>';
   for(var m=1;m<=12;m++){
     var key=y+'-'+String(m).padStart(2,'0');
     var monthExp=(state.expenses&&state.expenses[key])||{};
@@ -1313,7 +1310,7 @@ function renderExpMonthTable(y){
     cats.forEach(function(cat,i){var amt=monthExp[cat]||0;if((types[i]||'var')==='fixed')fixedAmt+=amt;else varAmt+=amt;});
     var tot=fixedAmt+varAmt;
     var isCur=(m===state.expSelMonth);
-    html+='<tr'+(isCur?' class="exp-month-cur"':'')+'><td>'+m+'月</td>';
+    html+='<tr'+(isCur?' class="exp-month-cur"':'')+'><td>'+m+'</td>';
     html+='<td>'+(fixedAmt>0?yen(fixedAmt):'—')+'</td>';
     html+='<td>'+(varAmt>0?yen(varAmt):'—')+'</td>';
     html+='<td class="exp-mtot">'+(tot>0?yen(tot):'—')+'</td></tr>';
