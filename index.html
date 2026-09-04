@@ -686,7 +686,7 @@ function closePnlModal() {
   _expCatIdx = -1;
 }
 function expDragStart(e,idx){
-  if(e.target.tagName==='BUTTON')return;
+  if(e.target.tagName==='BUTTON'||e.target.tagName==='INPUT')return;
   _expDragIdx=idx;_expDragActive=false;_expDragOverIdx=idx;
   _expDragStartY=e.touches?e.touches[0].clientY:e.clientY;
   _expDragTimer=setTimeout(function(){
@@ -1251,7 +1251,7 @@ function renderExpensePanel(){
       sectionTotal+=amt;
       const esc=escHtml(cat);
       const badge=tp==='fixed'?'固定':'変動';
-      var amtHtml=tp==='fixed'?'<input class="exp-fixed-input" type="text" inputmode="numeric" value="'+(amt>0?amt:'')+'" placeholder="0" oninput="setFixedExpCat(\''+key+'\','+i+',this.value)" onfocus="this.select()" onclick="event.stopPropagation()">':'<span class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</span>';
+      var amtHtml=tp==='fixed'?'<input class="exp-fixed-input" type="text" inputmode="numeric" value="'+(amt>0?amt:'')+'" placeholder="0" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()" oninput="setFixedExpCat(\''+key+'\','+i+',this.value)" onfocus="this.select()">':'<span class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</span>';
       html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')"><div class="cat-row"><span class="exp-type-badge exp-type-'+tp+'" onclick="toggleExpCatType('+i+')">'+badge+'</span><span class="cat-name-btn" style="cursor:default;text-decoration:none">'+esc+'</span>'+amtHtml+'<button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div></div>';
     });
     if(!hasAny)html+='<div class="exp-section-empty" data-exptype="'+tp+'">—</div>';
