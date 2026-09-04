@@ -737,7 +737,7 @@ function expDragEnd(){
   document.removeEventListener('touchmove',expDragMove);
   document.removeEventListener('mousemove',expDragMove);
   if(_expDragActive&&_expDragIdx>=0&&(_expDragOverType||(_expDragOverIdx>=0&&_expDragOverIdx!==_expDragIdx))){
-    var allRows=document.querySelectorAll('.cat-item[data-idx]');
+    var allRows=(document.getElementById('exp-cat-list')||document).querySelectorAll('.cat-item[data-idx]');
     var domOrder=Array.from(allRows).map(function(r){return parseInt(r.dataset.idx);});
     var srcPos=domOrder.indexOf(_expDragIdx);
     var tgtPos=domOrder.indexOf(_expDragOverIdx);
