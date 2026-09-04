@@ -1395,7 +1395,24 @@ function setFixedExpCat(monthKey,catIdx,value){
     if(!Object.keys(state.expenses[monthKey]).length)delete state.expenses[monthKey];
   }
   save();
-  renderExpensePanel();
+  // Update totals in-place without re-rendering (avoids losing input focus)
+  var cats=state.expenseCategories||[];
+  var types=state.expenseCatTypes||[];
+  var monthExp=(state.expenses&&state.expenses[monthKey])||{};
+  var fixedTotal=0,varTotal=0,grandTotal=0;
+  cats.forEach(function(c2,ci){
+    var a=monthExp[c2]||0;grandTotal+=a;
+    if((types[ci]||'var')==='fixed')fixedTotal+=a;else varTotal+=a;
+  });
+  var order=state.expFixedFirst===false?['var','fixed']:['fixed','var'];
+  document.querySelectorAll('.exp-section-total').forEach(function(el,idx){
+    var tp=order[idx];
+    var amt=tp==='fixed'?fixedTotal:varTotal;
+    var sp=el.querySelector('span:last-child');
+    if(sp)sp.textContent=amt>0?yen(amt):'—';
+  });
+  var tr=document.querySelector('.exp-total-row span:last-child');
+  if(tr)tr.textContent=grandTotal>0?yen(grandTotal):'—';
 }
 function updateExpCalCell(ds){
   var cell=document.querySelector('[data-expdate="'+ds+'"]');
