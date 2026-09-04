@@ -715,7 +715,8 @@ function expDragMove(e){
   }
   e.preventDefault();
   if(_expDragClone)_expDragClone.style.top=(_expDragCloneTop+(clientY-_expDragStartY))+'px';
-  var rows=document.querySelectorAll('.cat-item[data-idx]');
+  var list=document.getElementById('exp-cat-list');
+  var rows=(list||document).querySelectorAll('.cat-item[data-idx]');
   var newOver=_expDragIdx;
   rows.forEach(function(row){
     var rect=row.getBoundingClientRect();
@@ -769,7 +770,7 @@ function expDragEnd(){
 function expDragCleanup(){
   _expDragActive=false;
   if(_expDragClone){_expDragClone.remove();_expDragClone=null;}
-  document.querySelectorAll('.cat-item[data-idx]').forEach(function(r){r.style.opacity='';r.classList.remove('exp-drag-target');});
+  (document.getElementById('exp-cat-list')||document).querySelectorAll('.cat-item[data-idx]').forEach(function(r){r.style.opacity='';r.classList.remove('exp-drag-target');});
   _expDragIdx=-1;_expDragOverIdx=-1;_expDragOverType=null;
 }
 function pnlModalBgClick(e) {
