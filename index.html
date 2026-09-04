@@ -378,6 +378,7 @@ canvas#assetChart { width: 100%; display: block; }
 .exp-type-var{background:#f0f0ff;color:#6366f1;border-color:#c7d2fe;}
 .exp-sec-swap{float:right;background:none;border:none;font-size:15px;cursor:pointer;color:#aaa;padding:0 2px;line-height:1;margin-top:-1px;}
 .exp-sec-swap:active{color:#6366f1;}
+.exp-fixed-input{width:80px;border:1px solid #fca5a5;border-radius:6px;padding:3px 6px;font-size:12px;text-align:right;background:#fff0f0;color:#e74c3c;font-weight:700;-webkit-appearance:none;}
 .exp-month-table-wrap{margin-top:18px;}
 .exp-month-table{width:100%;border-collapse:collapse;font-size:12px;}
 .exp-month-table th{color:#888;font-weight:700;padding:4px 6px;border-bottom:1.5px solid #e8e0ff;text-align:right;}
@@ -1250,7 +1251,8 @@ function renderExpensePanel(){
       sectionTotal+=amt;
       const esc=escHtml(cat);
       const badge=tp==='fixed'?'固定':'変動';
-      html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')"><div class="cat-row"><span class="exp-type-badge exp-type-'+tp+'" onclick="toggleExpCatType('+i+')">'+badge+'</span><span class="cat-name-btn" style="cursor:default;text-decoration:none">'+esc+'</span><span class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</span><button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div></div>';
+      var amtHtml=tp==='fixed'?'<input class="exp-fixed-input" type="text" inputmode="numeric" value="'+(amt>0?amt:'')+'" placeholder="0" oninput="setFixedExpCat(\''+key+'\','+i+',this.value)" onfocus="this.select()" onclick="event.stopPropagation()">':'<span class="exp-row-amt">'+(amt>0?yen(amt):'—')+'</span>';
+      html+='<div class="cat-item" id="exp-row-'+i+'" data-idx="'+i+'" onmousedown="expDragStart(event,'+i+')" ontouchstart="expDragStart(event,'+i+')"><div class="cat-row"><span class="exp-type-badge exp-type-'+tp+'" onclick="toggleExpCatType('+i+')">'+badge+'</span><span class="cat-name-btn" style="cursor:default;text-decoration:none">'+esc+'</span>'+amtHtml+'<button class="cat-del-btn" onclick="delExpCat('+i+')">×</button></div></div>';
     });
     if(!hasAny)html+='<div class="exp-section-empty" data-exptype="'+tp+'">—</div>';
     html+='<div class="exp-section-total"><span>'+(tp==='fixed'?'固定費計':'変動費計')+'</span><span>'+(sectionTotal>0?yen(sectionTotal):'—')+'</span></div>';
@@ -1324,7 +1326,9 @@ function renderExpDayPanel(){
   var html='<div class="exp-day-panel">';
   html+='<div class="exp-day-panel-title">'+parseInt(parts[1])+'月'+parseInt(parts[2])+'日</div>';
   var sel=_expSelDate;
+  var types=state.expenseCatTypes||[];
   cats.forEach(function(cat,i){
+    if((types[i]||'var')==='fixed')return;
     var val=dayExp[cat]||'';
     var esc=escHtml(cat);
     html+='<div class="exp-day-cat-row">';
@@ -1377,6 +1381,21 @@ function setDailyExpCat(ds,catIdx,value){
   var total=0;cats.forEach(function(c){total+=(monthExp[c]||0);});
   var totalSpans=document.querySelectorAll('.exp-total-row span');
   if(totalSpans.length>1)totalSpans[totalSpans.length-1].textContent=total>0?yen(total):'—';
+}
+function setFixedExpCat(monthKey,catIdx,value){
+  var val=parseFloat(String(value).replace(/,/g,''));
+  var cat=(state.expenseCategories||[])[catIdx];
+  if(cat===undefined)return;
+  if(!state.expenses)state.expenses={};
+  if(!state.expenses[monthKey])state.expenses[monthKey]={};
+  if(!isNaN(val)&&val>0){
+    state.expenses[monthKey][cat]=val;
+  } else {
+    delete state.expenses[monthKey][cat];
+    if(!Object.keys(state.expenses[monthKey]).length)delete state.expenses[monthKey];
+  }
+  save();
+  renderExpensePanel();
 }
 function updateExpCalCell(ds){
   var cell=document.querySelector('[data-expdate="'+ds+'"]');
