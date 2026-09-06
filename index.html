@@ -1267,8 +1267,10 @@ function renderExpensePanel(){
   } else {
     html='<div style="text-align:center;color:#bbb;padding:20px 0;font-size:13px">カテゴリーを追加してください</div>';
   }
-  html+=renderExpCalHtml(y,m);
+  var catHtml=html;
+  html=renderExpCalHtml(y,m);
   html+='<div id="exp-day-panel"></div>';
+  html+=catHtml;
   html+=renderExpMonthTable(y);
   const list=document.getElementById('exp-cat-list');
   if(list){list.innerHTML=html;renderExpDayPanel();}
