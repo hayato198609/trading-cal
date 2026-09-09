@@ -1340,10 +1340,10 @@ function renderExpDayPanel(){
     var esc=escHtml(cat);
     html+='<div class="exp-day-cat-row">';
     html+='<span class="exp-day-cat-name">'+esc+'</span>';
-    html+='<button class="exp-day-add-btn" onclick="addExpDayCat(\''+sel+'\','+i+')">＋</button>';
-    html+='<input class="exp-day-cat-input" type="text" inputmode="numeric" value="'+val+'" placeholder="0"';
+        html+='<input class="exp-day-cat-input" type="text" inputmode="numeric" value="'+val+'" placeholder="0"';
     html+=' oninput="setDailyExpCat(\'' +sel+ '\',' +i+ ',this.value)"';
     html+=' onfocus="this.select()">';
+    html+='<button class="exp-day-add-btn" onclick="addExpDayCat(\''+sel+'\','+i+')">＋</button>';
     html+='</div>';
   });
   html+='</div>';
