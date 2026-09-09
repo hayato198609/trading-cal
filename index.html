@@ -376,6 +376,7 @@ canvas#assetChart { width: 100%; display: block; }
 .exp-type-var{background:#f0f0ff;color:#6366f1;border-color:#c7d2fe;}
 .exp-sec-swap{float:right;background:none;border:none;font-size:15px;cursor:pointer;color:#aaa;padding:0 2px;line-height:1;margin-top:-1px;}
 .exp-sec-swap:active{color:#6366f1;}
+.exp-day-add-btn{background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:6px;color:#1e8a4a;font-size:14px;font-weight:700;cursor:pointer;min-width:28px;min-height:28px;padding:2px 6px;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
 .exp-fixed-input{width:80px;border:1px solid #fca5a5;border-radius:6px;padding:3px 6px;font-size:12px;text-align:right;background:#fff0f0;color:#e74c3c;font-weight:700;-webkit-appearance:none;}
 .exp-month-table-wrap{margin-top:18px;}
 .exp-month-table{width:100%;border-collapse:collapse;font-size:12px;}
@@ -1339,6 +1340,7 @@ function renderExpDayPanel(){
     var esc=escHtml(cat);
     html+='<div class="exp-day-cat-row">';
     html+='<span class="exp-day-cat-name">'+esc+'</span>';
+    html+='<button class="exp-day-add-btn" onclick="addExpDayCat(\''+sel+'\','+i+')">＋</button>';
     html+='<input class="exp-day-cat-input" type="text" inputmode="numeric" value="'+val+'" placeholder="0"';
     html+=' oninput="setDailyExpCat(\'' +sel+ '\',' +i+ ',this.value)"';
     html+=' onfocus="this.select()">';
@@ -1346,6 +1348,16 @@ function renderExpDayPanel(){
   });
   html+='</div>';
   panel.innerHTML=html;
+}
+function addExpDayCat(date,catIdx){
+  var cat=(state.expenseCategories||[])[catIdx];
+  if(!cat)return;
+  var cur=(state.dailyExpenses&&state.dailyExpenses[date]&&state.dailyExpenses[date][cat])||0;
+  var input=prompt(cat+' に追加する金額を入力\n現在: '+(cur>0?yen(cur):'0円'));
+  if(input===null)return;
+  var add=parseFloat(String(input).replace(/[,\uFF0C]/g,'').replace(/[−ー]/g,'-').trim());
+  if(isNaN(add))return;
+  setDailyExpCat(date,catIdx,String(cur+add));
 }
 function openExpDayDetail(ds){
   document.querySelectorAll('.exp-cal-sel').forEach(function(el){el.classList.remove('exp-cal-sel');});
