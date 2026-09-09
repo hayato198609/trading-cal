@@ -1349,16 +1349,36 @@ function renderExpDayPanel(){
   html+='</div>';
   panel.innerHTML=html;
 }
+var _expAddDate=null,_expAddCatIdx=null;
 function addExpDayCat(date,catIdx){
   var cat=(state.expenseCategories||[])[catIdx];
   if(!cat)return;
   var cur=(state.dailyExpenses&&state.dailyExpenses[date]&&state.dailyExpenses[date][cat])||0;
-  var input=prompt(cat+' に追加する金額を入力\n現在: '+(cur>0?yen(cur):'0円'));
-  if(input===null)return;
-  var add=parseFloat(String(input).replace(/[,\uFF0C]/g,'').replace(/[−ー]/g,'-').trim());
-  if(isNaN(add))return;
-  setDailyExpCat(date,catIdx,String(cur+add));
-  renderExpDayPanel();
+  _expAddDate=date;_expAddCatIdx=catIdx;
+  document.getElementById('exp-add-modal-title').textContent=cat+(cur>0?' (現在: '+yen(cur)+')':'');
+  var inp=document.getElementById('exp-add-modal-input');
+  inp.value='';
+  document.getElementById('exp-add-modal').classList.add('open');
+  setTimeout(function(){inp.focus();},80);
+}
+function closeExpAddModal(){
+  document.getElementById('exp-add-modal').classList.remove('open');
+  _expAddDate=null;_expAddCatIdx=null;
+}
+function expAddModalBgClick(e){
+  if(e.target===document.getElementById('exp-add-modal'))closeExpAddModal();
+}
+function confirmExpAddModal(){
+  if(_expAddDate===null)return;
+  var inp=document.getElementById('exp-add-modal-input');
+  var add=parseFloat(String(inp.value).replace(/,/g,'').trim());
+  if(!isNaN(add)){
+    var cat=(state.expenseCategories||[])[_expAddCatIdx];
+    var cur=(state.dailyExpenses&&state.dailyExpenses[_expAddDate]&&state.dailyExpenses[_expAddDate][cat])||0;
+    setDailyExpCat(_expAddDate,_expAddCatIdx,String(cur+add));
+    renderExpDayPanel();
+  }
+  closeExpAddModal();
 }
 function openExpDayDetail(ds){
   document.querySelectorAll('.exp-cal-sel').forEach(function(el){el.classList.remove('exp-cal-sel');});
@@ -1582,5 +1602,18 @@ function importData(){
   inp.click();
 }
 </script>
+<div class="pnl-modal" id="exp-add-modal" onclick="expAddModalBgClick(event)">
+  <div class="pnl-modal-box">
+    <div class="pnl-modal-title" id="exp-add-modal-title"></div>
+    <input class="pnl-modal-input" id="exp-add-modal-input" type="text" inputmode="numeric"
+      placeholder="追加金額を入力"
+      onkeydown="if(event.key==='Enter')confirmExpAddModal()">
+    <div class="pnl-modal-btns">
+      <button class="pnl-modal-cancel" onclick="closeExpAddModal()">キャンセル</button>
+      <button class="pnl-modal-ok" onclick="confirmExpAddModal()">追加</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
