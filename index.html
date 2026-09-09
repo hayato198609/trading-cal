@@ -540,9 +540,6 @@ header h1 { font-size: 17px; font-weight: 700; }
         <button class="cal-nav-btn" onclick="changeExpMonth(1)">›</button>
       </div>
       <div id="exp-cat-list"></div>
-      <div style="margin-top:14px;text-align:center">
-        <button class="exp-add-cat-btn" onclick="addExpenseCat()">＋ カテゴリー追加</button>
-      </div>
     </div>
   </div>
 
@@ -1268,6 +1265,7 @@ function renderExpensePanel(){
   html=renderExpCalHtml(y,m);
   html+='<div id="exp-day-panel"></div>';
   html+=catHtml;
+  html+='<div style="margin-top:14px;text-align:center"><button class="exp-add-cat-btn" onclick="addExpenseCat()">＋ カテゴリー追加</button></div>';
   html+=renderExpMonthTable(y);
   const list=document.getElementById('exp-cat-list');
   if(list){list.innerHTML=html;renderExpDayPanel();}
