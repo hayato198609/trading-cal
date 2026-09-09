@@ -1002,8 +1002,7 @@ function renderCatList(){
           <span id="${cid}-lbl"></span>
           <button class="cat-inline-nav-btn" onclick="catInlineYearChange('${esc}','${cid}',+1)">›</button>
         </div>
-        <canvas id="${cid}-canvas" height="160" style="width:100%;display:block"></canvas>
-        <div id="${cid}-nodata" class="cat-inline-no-data" style="display:none">記録がありません</div>
+        <div id="${cid}-table"></div>
       </div>
     </div>`;
   }).join('');
@@ -1139,56 +1138,39 @@ function catInlineYearChange(cat, cid, delta) {
   renderCatInlineChart(cat, cid);
 }
 
-function renderCatInlineChart(cat, cid) {
-  const y = _catYears[cat] || TODAY.getFullYear();
-  const lbl = document.getElementById(cid + '-lbl');
-  const canvas = document.getElementById(cid + '-canvas');
-  const noData = document.getElementById(cid + '-nodata');
-  if (!canvas) return;
-  if (lbl) lbl.textContent = `${y}年`;
-  const months = Array.from({length:12},(_,i)=>i+1);
-  const vals = months.map(mo => {
-    const prefix = `${y}-${String(mo).padStart(2,'0')}`;
-    const keys = Object.keys(state.assetRecords).filter(k => k===prefix||k.startsWith(prefix+'-'));
-    if (!keys.length) return null;
+function renderCatInlineChart(cat,cid){
+  const y=_catYears[cat]||TODAY.getFullYear();
+  const lbl=document.getElementById(cid+'-lbl');
+  const container=document.getElementById(cid+'-table');
+  if(!container)return;
+  if(lbl)lbl.textContent=y+'年';
+  const months=Array.from({length:12},(_,i)=>i+1);
+  const vals=months.map(function(mo){
+    const prefix=y+'-'+String(mo).padStart(2,'0');
+    const keys=Object.keys(state.assetRecords).filter(function(k){return k===prefix||k.startsWith(prefix+'-');});
+    if(!keys.length)return null;
     keys.sort();
-    const rec = state.assetRecords[keys[keys.length-1]];
-    return (rec.values && rec.values[cat] != null) ? rec.values[cat] : null;
+    const rec=state.assetRecords[keys[keys.length-1]];
+    return (rec.values&&rec.values[cat]!=null)?rec.values[cat]:null;
   });
-  if (!vals.some(v => v !== null && v !== 0)) {
-    canvas.style.display='none'; noData.style.display='block'; return;
+  if(!vals.some(function(v){return v!==null&&v!==0;})){
+    container.innerHTML='<div class="cat-inline-no-data">記録がありません</div>';
+    return;
   }
-  canvas.style.display='block'; noData.style.display='none';
-  const W = canvas.parentElement.clientWidth - 4, H = 160;
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,W,H);
-  const PAD = {top:22,right:14,bottom:30,left:6};
-  const cW = W-PAD.left-PAD.right, cH = H-PAD.top-PAD.bottom;
-  const dv = vals.filter(v=>v!==null&&v!==0);
-  let maxV=Math.max(...dv), minV=Math.min(...dv);
-  if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}
-  else{const p=(maxV-minV)*0.15;maxV+=p;minV=Math.max(0,minV-p);}
-  const barW=cW/12*0.62;
-  const xCenter=mo=>PAD.left+((mo-0.5)/12)*cW;
-  const yOf=v=>PAD.top+(1-(v-minV)/(maxV-minV))*cH;
-  const base=PAD.top+cH;
-  ctx.fillStyle='#bbb'; ctx.font='9px sans-serif'; ctx.textAlign='center';
-  months.forEach(mo=>ctx.fillText(mo+'月',xCenter(mo),H-PAD.bottom+12));
-  const col='#6366f1';
-  vals.forEach((v,i)=>{
-    if(v===null||v===0)return;
-    const mo=i+1,x=xCenter(mo),y=yOf(v);
-    ctx.fillStyle=col;
-    const r=2;
-    ctx.beginPath();
-    ctx.moveTo(x-barW/2+r,y);ctx.lineTo(x+barW/2-r,y);ctx.arcTo(x+barW/2,y,x+barW/2,y+r,r);
-    ctx.lineTo(x+barW/2,base);ctx.lineTo(x-barW/2,base);ctx.lineTo(x-barW/2,y+r);
-    ctx.arcTo(x-barW/2,y,x-barW/2+r,y,r);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#333';ctx.font='bold 8px sans-serif';ctx.textAlign='center';
-    ctx.fillText(yen(v),x,y-4);
-  });
+  var html='<table class="asset-month-tbl"><tbody>';
+  for(var i=0;i<6;i++){
+    var v1=vals[i],v2=vals[i+6];
+    html+='<tr>';
+    html+='<td class="asset-mtbl-mo">'+(i+1)+'月</td>';
+    html+='<td class="asset-mtbl-val">'+(v1!==null&&v1!==0?yen(v1):'—')+'</td>';
+    html+='<td class="asset-mtbl-sep"></td>';
+    html+='<td class="asset-mtbl-mo">'+(i+7)+'月</td>';
+    html+='<td class="asset-mtbl-val">'+(v2!==null&&v2!==0?yen(v2):'—')+'</td>';
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  container.innerHTML=html;
 }
-
 // ============================================================
 // グラフ（月次 - 各月の最終記録を使用）
 // ============================================================
