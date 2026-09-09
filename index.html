@@ -431,6 +431,12 @@ header h1 { font-size: 17px; font-weight: 700; }
   .cat-row { gap: 6px; padding: 6px 4px 6px 8px; }
   .asset-dp-day { font-size: 11px; padding: 4px 1px; }
 }
+.pie-chart-title{font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:10px;}
+.pie-legend{margin-top:8px;}
+.pie-legend-row{display:flex;align-items:center;gap:8px;padding:3px 0;}
+.pie-legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.pie-legend-cat{flex:1;font-size:13px;color:#333;}
+.pie-legend-pct{font-size:13px;font-weight:700;color:#555;}
 </style>
 </head>
 <body>
@@ -518,6 +524,10 @@ header h1 { font-size: 17px; font-weight: 700; }
         <button class="cal-nav-btn" onclick="changeChartYear(+1)">›</button>
       </div>
       <div id="asset-month-table"></div>
+    </div>
+    <div class="card">
+      <div class="pie-chart-title">資産割合</div>
+      <div id="asset-pie-chart"></div>
     </div>
   </div>
 
@@ -615,6 +625,7 @@ function switchTab(tab) {
     renderCatList();
     renderAssetMonthSel();
     renderAssetTable();
+    renderAssetPieChart();
   }
   if(tab==='expense'){
     state.expSelYear=TODAY.getFullYear();
@@ -1076,7 +1087,7 @@ function recordAsset(){
   Object.keys(state.assetRecords).filter(k=>k.startsWith(key+'-')).forEach(k=>delete state.assetRecords[k]);
   state.assetRecords[key]={total,values};
   const _now=new Date();state.lastAssetUpdate=_now.getFullYear()+'年'+(_now.getMonth()+1)+'月'+_now.getDate()+'日';
-  save();renderAssetTable();
+  save();renderAssetTable();renderAssetPieChart();
   state.categories.forEach(function(cat){var cid=catChartId(cat);var p=document.getElementById(cid);if(p&&p.classList.contains('open'))renderCatInlineChart(cat,cid);});
   alert(`${y}年${m}月の資産 ${yen(total)} を記録しました`);
 }
@@ -1087,6 +1098,7 @@ function selectAssetMonth(m){
   state.chartYear=state.assetSelYear;
   renderAssetMonthSel();
   renderAssetTable();
+  renderAssetPieChart();
 }
 function assetYearChange(delta){
   state.assetSelYear+=delta;
@@ -1094,6 +1106,7 @@ function assetYearChange(delta){
   state.chartYear=state.assetSelYear;
   renderAssetMonthSel();
   renderAssetTable();
+  renderAssetPieChart();
   state.categories.forEach(function(cat){var cid=catChartId(cat);var p=document.getElementById(cid);if(p&&p.classList.contains('open'))renderCatInlineChart(cat,cid);});
 }
 function renderAssetMonthSel(){
@@ -1218,6 +1231,37 @@ let _expCatIdx = -1;
 let _expSelDate = null;
 let _expDragOverType=null;
 let _expDragIdx=-1,_expDragOverIdx=-1,_expDragActive=false,_expDragTimer=null,_expDragClone=null,_expDragStartY=0,_expDragCloneTop=0;
+
+function renderAssetPieChart(){
+  const container=document.getElementById('asset-pie-chart');
+  if(!container)return;
+  const keys=Object.keys(state.assetRecords).sort();
+  if(!keys.length){container.innerHTML='<div style="text-align:center;color:#ccc;font-size:13px;padding:20px 0">記録がありません</div>';return;}
+  const latest=state.assetRecords[keys[keys.length-1]];
+  const vals=latest.values||{};
+  const cats=(state.categories||[]).filter(c=>vals[c]&&vals[c]>0);
+  if(!cats.length){container.innerHTML='<div style="text-align:center;color:#ccc;font-size:13px;padding:20px 0">記録がありません</div>';return;}
+  const total=cats.reduce((s,c)=>s+vals[c],0);
+  const colors=['#4fc3f7','#81c784','#ffb74d','#e57373','#ba68c8','#4db6ac','#ff8a65','#a1887f','#90a4ae','#f06292'];
+  const cx=100,cy=100,r=85;
+  let paths='',start=-Math.PI/2;
+  cats.forEach(function(cat,i){
+    var pct=vals[cat]/total;
+    var end=start+pct*2*Math.PI;
+    var x1=cx+r*Math.cos(start),y1=cy+r*Math.sin(start);
+    var x2=cx+r*Math.cos(end),y2=cy+r*Math.sin(end);
+    var la=pct>0.5?1:0;
+    paths+='<path d="M'+cx+','+cy+' L'+x1.toFixed(1)+','+y1.toFixed(1)+' A'+r+','+r+' 0 '+la+',1 '+x2.toFixed(1)+','+y2.toFixed(1)+' Z" fill="'+colors[i%colors.length]+'"/>';
+    start=end;
+  });
+  var legend='<div class="pie-legend">';
+  cats.forEach(function(cat,i){
+    var pct=(vals[cat]/total*100).toFixed(1);
+    legend+='<div class="pie-legend-row"><span class="pie-legend-dot" style="background:'+colors[i%colors.length]+'"></span><span class="pie-legend-cat">'+escHtml(cat)+'</span><span class="pie-legend-pct">'+pct+'%</span></div>';
+  });
+  legend+='</div>';
+  container.innerHTML='<svg width="200" height="200" viewBox="0 0 200 200" style="display:block;margin:0 auto">'+paths+'</svg>'+legend;
+}
 
 function renderExpensePanel(){
   const y=state.expSelYear,m=state.expSelMonth;
