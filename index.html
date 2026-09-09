@@ -854,7 +854,7 @@ function renderStats(){
   const ac2=avg!==null&&avg>=0?'stat-pos':'stat-neg';
   ct.innerHTML=
     '<div class="stats-card"><div class="stats-card-title">曜日別平均損益（'+y+'年）</div><div class="dow-grid">'+dowHtml+'</div></div>'
-    +'<div class="stats-card"><div class="stats-card-title">今年度の成績（'+y+'年）</div>'
+    +'<div class="stats-card"><div class="stats-card-title">'+y+'年の成績</div>'
     +'<div class="year-quad">'
     +'<div class="year-quad-cell"><div class="year-quad-lbl">勝率</div><div class="year-quad-val '+wc+'">'+(wr!==null?wr+'%':'-')+'</div><div class="year-quad-sub">'+wins+'日 / '+tot+'日</div></div>'
     +'<div class="year-quad-cell"><div class="year-quad-lbl">平均損益</div><div class="year-quad-val '+ac2+'">'+(avg!==null?(avg>=0?'+':'')+yen(Math.round(avg)):'-')+'</div></div>'
