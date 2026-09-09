@@ -342,7 +342,12 @@ header h1 { font-size: 17px; font-weight: 700; }
 .month-btn.sel{background:#4fc3f7;color:#fff;border-color:#0288d1;font-weight:700;}
 .chart-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .chart-nav span { font-size: 14px; font-weight: 700; }
-canvas#assetChart { width: 100%; display: block; }
+.asset-month-tbl{width:100%;border-collapse:collapse;margin-top:4px;}
+.asset-month-tbl tr{border-bottom:1px solid #f0f0f0;}
+.asset-month-tbl tr:last-child{border-bottom:none;}
+.asset-mtbl-mo{padding:9px 4px 9px 8px;font-size:13px;color:#888;font-weight:600;width:36px;}
+.asset-mtbl-val{padding:9px 8px;font-size:13px;font-weight:700;color:#1a1a2e;}
+.asset-mtbl-sep{width:16px;border-left:1px solid #eee;}
 
 /* PWAインストールバナー */
 #install-banner {
@@ -521,8 +526,7 @@ canvas#assetChart { width: 100%; display: block; }
         <span id="chart-year-lbl"></span>
         <button class="cal-nav-btn" onclick="changeChartYear(+1)">›</button>
       </div>
-      <canvas id="assetChart" height="200"></canvas>
-      <div id="chart-no-data" style="text-align:center;color:#ccc;font-size:13px;padding:30px 0;display:none">記録がありません</div>
+      <div id="asset-month-table"></div>
     </div>
   </div>
 
@@ -622,7 +626,7 @@ function switchTab(tab) {
     state.chartYear=TODAY.getFullYear();
     renderCatList();
     renderAssetMonthSel();
-    renderChart();
+    renderAssetTable();
   }
   if(tab==='expense'){
     state.expSelYear=TODAY.getFullYear();
@@ -1085,7 +1089,7 @@ function recordAsset(){
   Object.keys(state.assetRecords).filter(k=>k.startsWith(key+'-')).forEach(k=>delete state.assetRecords[k]);
   state.assetRecords[key]={total,values};
   const _now=new Date();state.lastAssetUpdate=_now.getFullYear()+'年'+(_now.getMonth()+1)+'月'+_now.getDate()+'日';
-  save();renderChart();
+  save();renderAssetTable();
   state.categories.forEach(function(cat){var cid=catChartId(cat);var p=document.getElementById(cid);if(p&&p.classList.contains('open'))renderCatInlineChart(cat,cid);});
   alert(`${y}年${m}月の資産 ${yen(total)} を記録しました`);
 }
@@ -1095,14 +1099,14 @@ function selectAssetMonth(m){
   state.calMonth=m-1;
   state.chartYear=state.assetSelYear;
   renderAssetMonthSel();
-  renderChart();
+  renderAssetTable();
 }
 function assetYearChange(delta){
   state.assetSelYear+=delta;
   state.calYear=state.assetSelYear;
   state.chartYear=state.assetSelYear;
   renderAssetMonthSel();
-  renderChart();
+  renderAssetTable();
   state.categories.forEach(function(cat){var cid=catChartId(cat);var p=document.getElementById(cid);if(p&&p.classList.contains('open'))renderCatInlineChart(cat,cid);});
 }
 function renderAssetMonthSel(){
@@ -1188,44 +1192,37 @@ function renderCatInlineChart(cat, cid) {
 // ============================================================
 // グラフ（月次 - 各月の最終記録を使用）
 // ============================================================
-function changeChartYear(delta){state.chartYear+=delta;save();renderChart();}
-function renderChart(){
-  const y=state.chartYear;document.getElementById('chart-year-lbl').textContent=`${y}年`;
-  const canvas=document.getElementById('assetChart'),noData=document.getElementById('chart-no-data');
+function changeChartYear(delta){state.chartYear+=delta;save();renderAssetTable();}
+function renderAssetTable(){
+  const y=state.chartYear;
+  document.getElementById('chart-year-lbl').textContent=y+'年';
+  const container=document.getElementById('asset-month-table');
+  if(!container)return;
   const months=Array.from({length:12},(_,i)=>i+1);
-  const vals = months.map(mo => {
-    const prefix = `${y}-${String(mo).padStart(2,'0')}`;
-    const keys = Object.keys(state.assetRecords).filter(k => k===prefix||k.startsWith(prefix+'-'));
-    if (keys.length === 0) return null;
+  const vals=months.map(function(mo){
+    const prefix=y+'-'+String(mo).padStart(2,'0');
+    const keys=Object.keys(state.assetRecords).filter(function(k){return k===prefix||k.startsWith(prefix+'-');});
+    if(!keys.length)return null;
     keys.sort();
     return state.assetRecords[keys[keys.length-1]].total;
   });
-  if(!vals.some(v=>v!==null)){canvas.style.display='none';noData.style.display='block';return;}
-  canvas.style.display='block';noData.style.display='none';
-  const W=canvas.parentElement.clientWidth-40,H=220;
-  canvas.width=W;canvas.height=H;
-  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
-  const PAD={top:28,right:8,bottom:36,left:8},cW=W-PAD.left-PAD.right,cH=H-PAD.top-PAD.bottom;
-  const dv=vals.filter(v=>v!==null&&v!==0);let maxV=Math.max(...dv),minV=Math.min(...dv);
-  if(maxV===minV){maxV+=1000;minV=Math.max(0,minV-1000);}else{const p=(maxV-minV)*0.15;maxV+=p;minV=Math.max(0,minV-p);}
-  const barW=cW/12*0.62;
-  const xCenter=mo=>PAD.left+((mo-0.5)/12)*cW;
-  const yOf=v=>PAD.top+(1-(v-minV)/(maxV-minV))*cH;
-  const base=PAD.top+cH;
-  ctx.fillStyle='#aaa';ctx.font='10px sans-serif';ctx.textAlign='center';
-  months.forEach(mo=>ctx.fillText(mo+'月',xCenter(mo),H-PAD.bottom+14));
-  vals.forEach((v,i)=>{
-    if(v===null||v===0)return;
-    const mo=i+1,x=xCenter(mo),y=yOf(v);
-    ctx.fillStyle='#4fc3f7';
-    ctx.beginPath();
-    const r=3;
-    ctx.moveTo(x-barW/2+r,y);ctx.lineTo(x+barW/2-r,y);ctx.arcTo(x+barW/2,y,x+barW/2,y+r,r);
-    ctx.lineTo(x+barW/2,base);ctx.lineTo(x-barW/2,base);ctx.lineTo(x-barW/2,y+r);
-    ctx.arcTo(x-barW/2,y,x-barW/2+r,y,r);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#333';ctx.font='bold 9px sans-serif';ctx.textAlign='center';
-    ctx.fillText(yen(v),x,y-5);
-  });
+  if(!vals.some(function(v){return v!==null;})){
+    container.innerHTML='<div style="text-align:center;color:#ccc;font-size:13px;padding:20px 0">記録がありません</div>';
+    return;
+  }
+  var html='<table class="asset-month-tbl"><tbody>';
+  for(var i=0;i<6;i++){
+    var v1=vals[i],v2=vals[i+6];
+    html+='<tr>';
+    html+='<td class="asset-mtbl-mo">'+(i+1)+'月</td>';
+    html+='<td class="asset-mtbl-val">'+(v1!==null?yen(v1):'—')+'</td>';
+    html+='<td class="asset-mtbl-sep"></td>';
+    html+='<td class="asset-mtbl-mo">'+(i+7)+'月</td>';
+    html+='<td class="asset-mtbl-val">'+(v2!==null?yen(v2):'—')+'</td>';
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  container.innerHTML=html;
 }
 // ============================================================
 // 支出管理
