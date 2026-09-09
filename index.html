@@ -1188,19 +1188,36 @@ function renderAssetTable(){
     keys.sort();
     return state.assetRecords[keys[keys.length-1]].total;
   });
+  // Get previous December for month 1 comparison
+  var prevDecPrefix=(y-1)+'-12';
+  var prevDecKeys=Object.keys(state.assetRecords).filter(function(k){return k===prevDecPrefix||k.startsWith(prevDecPrefix+'-');});
+  var prevDec=prevDecKeys.length>0?state.assetRecords[prevDecKeys.sort()[prevDecKeys.length-1]].total:null;
   if(!vals.some(function(v){return v!==null;})){
     container.innerHTML='<div style="text-align:center;color:#ccc;font-size:13px;padding:20px 0">記録がありません</div>';
     return;
   }
+  function valCell(v,prev){
+    if(v===null)return '<td class="asset-mtbl-val">—</td>';
+    var diffHtml='';
+    if(prev!==null){
+      var diff=v-prev;
+      var sign=diff>=0?'+':'';
+      var cls=diff>=0?'mom-pos':'mom-neg';
+      diffHtml='<div class="'+cls+'" style="font-size:10px;font-weight:600;margin-top:1px">'+sign+yen(diff)+'</div>';
+    }
+    return '<td class="asset-mtbl-val">'+yen(v)+diffHtml+'</td>';
+  }
   var html='<table class="asset-month-tbl"><tbody>';
   for(var i=0;i<6;i++){
     var v1=vals[i],v2=vals[i+6];
+    var p1=i===0?prevDec:vals[i-1];
+    var p2=vals[i+5];
     html+='<tr>';
     html+='<td class="asset-mtbl-mo">'+(i+1)+'月</td>';
-    html+='<td class="asset-mtbl-val">'+(v1!==null?yen(v1):'—')+'</td>';
+    html+=valCell(v1,p1);
     html+='<td class="asset-mtbl-sep"></td>';
     html+='<td class="asset-mtbl-mo">'+(i+7)+'月</td>';
-    html+='<td class="asset-mtbl-val">'+(v2!==null?yen(v2):'—')+'</td>';
+    html+=valCell(v2,p2);
     html+='</tr>';
   }
   html+='</tbody></table>';
