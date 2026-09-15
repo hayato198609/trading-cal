@@ -1299,6 +1299,7 @@ function renderExpMonthTable(y){
     var monthExp=(state.expenses&&state.expenses[key])||{};
     var fixedAmt=0,varAmt=0;
     cats.forEach(function(cat,i){var amt=monthExp[cat]||0;if((types[i]||'var')==='fixed')fixedAmt+=amt;else varAmt+=amt;});
+    var _dt=state.deletedCatTypes||{};Object.keys(monthExp).forEach(function(cat){if(cats.indexOf(cat)===-1){var amt=monthExp[cat]||0;if(amt>0){if((_dt[cat]||'var')==='fixed')fixedAmt+=amt;else varAmt+=amt;}}});
     var tot=fixedAmt+varAmt;
     var isCur=(m===state.expSelMonth);
     html+='<tr'+(isCur?' class="exp-month-cur"':'')+'><td>'+m+'月</td>';
@@ -1497,10 +1498,11 @@ function addExpenseCat(){
 function delExpCat(i){
   const cat=state.expenseCategories[i];
   if(!confirm('「'+cat+'」を削除しますか？'))return;
+  const typ=(state.expenseCatTypes&&state.expenseCatTypes[i])||'var';
+  if(!state.deletedCatTypes)state.deletedCatTypes={};
+  state.deletedCatTypes[cat]=typ;
   state.expenseCategories.splice(i,1);
   if(state.expenseCatTypes)state.expenseCatTypes.splice(i,1);
-  Object.values(state.expenses||{}).forEach(mo=>delete mo[cat]);
-  Object.values(state.dailyExpenses||{}).forEach(day=>delete day[cat]);
   save();renderExpensePanel();
 }
 function toggleExpCatType(i){
