@@ -889,7 +889,7 @@ function renderMonthlyGrid() {
   html += '</div>';
   container.innerHTML = html;
 }
-function getKenriDate(y,m){
+function getKenriDates(y,m){
   const holidays=getHolidays(y);
   function isBiz(y,m,d){
     const dow=new Date(y,m,d).getDay();
@@ -902,10 +902,18 @@ function getKenriDate(y,m){
     do{dt.setDate(dt.getDate()-1);}while(!isBiz(dt.getFullYear(),dt.getMonth(),dt.getDate()));
     return dt.getDate();
   }
-  const last=new Date(y,m+1,0).getDate();
-  let kenri=last;
-  while(!isBiz(y,m,kenri))kenri--;
-  const _d1=prevBiz(y,m,kenri);return prevBiz(y,m,_d1);
+  function kenri2(d){
+    if(d<1||d>new Date(y,m+1,0).getDate())return null;
+    let kd=d;while(kd>0&&!isBiz(y,m,kd))kd--;
+    if(kd<1)return null;
+    const d1=prevBiz(y,m,kd);return prevBiz(y,m,d1);
+  }
+  const result=[];
+  function add(d){const r=kenri2(d);if(r!==null&&result.indexOf(r)===-1)result.push(r);}
+  add(new Date(y,m+1,0).getDate());
+  const EXTRA={9:[16]};
+  (EXTRA[m]||[]).forEach(function(d){add(d);});
+  return result;
 }
 function renderCalendar() {
   const y=state.calYear,m=state.calMonth,today=new Date();
@@ -921,7 +929,7 @@ function renderCalendar() {
   const numWeeks=cells.length/7;
   // カレンダーグリッド
   let html=DOW.map((d,i)=>`<div class="cal-dow ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('');
-  const kenriDay=getKenriDate(y,m);
+  const kenriDays=getKenriDates(y,m);
   for(let i=0;i<cells.length;i++){
     const d=cells[i];
     if(d===null){html+=`<div class="cal-cell empty"></div>`;continue;}
@@ -934,7 +942,7 @@ function renderCalendar() {
     if(pnlVal!=null){cls+=pnlVal>0?' has-pos':pnlVal<0?' has-neg':'';}
     const holLabel=holiday?`<div class="cal-holiday">${holiday}</div>`:'';
     const pnlLabel=pnlVal!=null?`<div class="cal-pnl-val ${pCls(pnlVal)}">${shortYen(pnlVal)}</div>`:'';
-    const kenriLabel=d===kenriDay?'<div class="cal-kenri">権利最終日</div>':'';
+    const kenriLabel=kenriDays.indexOf(d)!==-1?'<div class="cal-kenri">権利最終日</div>':'';
     html+=`<div class="${cls}" onclick="editDailyPnl('${key}','${y}\u5e74${m+1}\u6708${d}\u65e5')"><div class="cal-day">${d}</div>${holLabel}${pnlLabel}${kenriLabel}</div>`;
   }
   document.getElementById('cal-grid').innerHTML=html;
