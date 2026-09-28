@@ -905,7 +905,7 @@ function getKenriDate(y,m){
   const last=new Date(y,m+1,0).getDate();
   let kenri=last;
   while(!isBiz(y,m,kenri))kenri--;
-  return prevBiz(y,m,kenri);
+  return kenri;
 }
 function renderCalendar() {
   const y=state.calYear,m=state.calMonth,today=new Date();
@@ -934,7 +934,7 @@ function renderCalendar() {
     if(pnlVal!=null){cls+=pnlVal>0?' has-pos':pnlVal<0?' has-neg':'';}
     const holLabel=holiday?`<div class="cal-holiday">${holiday}</div>`:'';
     const pnlLabel=pnlVal!=null?`<div class="cal-pnl-val ${pCls(pnlVal)}">${shortYen(pnlVal)}</div>`:'';
-    const kenriLabel=d===kenriDay?'<div class="cal-kenri">最終売買日</div>':'';
+    const kenriLabel=d===kenriDay?'<div class="cal-kenri">権利確定日</div>':'';
     html+=`<div class="${cls}" onclick="editDailyPnl('${key}','${y}\u5e74${m+1}\u6708${d}\u65e5')"><div class="cal-day">${d}</div>${holLabel}${pnlLabel}${kenriLabel}</div>`;
   }
   document.getElementById('cal-grid').innerHTML=html;
