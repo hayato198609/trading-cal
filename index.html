@@ -942,7 +942,7 @@ function renderCalendar() {
     if(pnlVal!=null){cls+=pnlVal>0?' has-pos':pnlVal<0?' has-neg':'';}
     const holLabel=holiday?`<div class="cal-holiday">${holiday}</div>`:'';
     const pnlLabel=pnlVal!=null?`<div class="cal-pnl-val ${pCls(pnlVal)}">${shortYen(pnlVal)}</div>`:'';
-    const kenriLabel=kenriDays.indexOf(d)!==-1?'<div class="cal-kenri">権利日</div>':'';
+    const kenriLabel=kenriDays.indexOf(d)!==-1&&(function(){var _t=new Date();return y>_t.getFullYear()||(y===_t.getFullYear()&&m>_t.getMonth())||(y===_t.getFullYear()&&m===_t.getMonth()&&d>=_t.getDate());})()?'<div class="cal-kenri">権利日</div>':'';
     html+=`<div class="${cls}" onclick="editDailyPnl('${key}','${y}\u5e74${m+1}\u6708${d}\u65e5')"><div class="cal-day">${d}</div>${holLabel}${pnlLabel}${kenriLabel}</div>`;
   }
   document.getElementById('cal-grid').innerHTML=html;
