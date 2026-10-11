@@ -1632,7 +1632,7 @@ function showCatYearDetail(cat){
     var key=y+'-'+String(m).padStart(2,'0');
     var amt=(state.expenses&&state.expenses[key]&&state.expenses[key][cat])||0;
     var isCur=(m===state.expSelMonth);
-    html+='<tr'+(isCur?' class="exp-month-cur"':''))+'><td>'+m+'月</td><td style="text-align:right">'+(amt>0?yen(amt):'—')+'</td></tr>';
+    html+='<tr'+(isCur?' class="exp-month-cur"':'')+'><td>'+m+'月</td><td style="text-align:right">'+(amt>0?yen(amt):'—')+'</td></tr>';
     total+=amt;
   }
   html+='</tbody></table>';
