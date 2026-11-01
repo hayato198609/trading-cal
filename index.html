@@ -1259,6 +1259,26 @@ function renderExpensePanel(){
   if(lbl)lbl.textContent=y+'年'+m+'月';
   const key=y+'-'+String(m).padStart(2,'0');
   const monthExp=(state.expenses&&state.expenses[key])||{};
+  // Auto-carry-over fixed expenses from previous month if not yet set for this month
+  (function(){
+    var prevM=m-1,prevY=y;
+    if(prevM<1){prevM=12;prevY=y-1;}
+    var prevKey=prevY+'-'+String(prevM).padStart(2,'0');
+    var prevExp=(state.expenses&&state.expenses[prevKey])||{};
+    var _types=state.expenseCatTypes||[];
+    var _cats=state.expenseCategories||[];
+    var changed=false;
+    _cats.forEach(function(cat,i){
+      if((_types[i]||'var')==='fixed'&&!(cat in monthExp)&&prevExp[cat]>0){
+        if(!state.expenses)state.expenses={};
+        if(!state.expenses[key])state.expenses[key]={};
+        state.expenses[key][cat]=prevExp[cat];
+        monthExp[cat]=prevExp[cat];
+        changed=true;
+      }
+    });
+    if(changed)save();
+  })();
   const cats=state.expenseCategories||[];
   let total=0;
   let html='';
