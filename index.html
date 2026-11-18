@@ -450,6 +450,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .pnl-yr-toggle{cursor:pointer;font-size:15px;font-weight:700;color:#1a1a2e;-webkit-tap-highlight-color:transparent;user-select:none;}
 .pnl-yr-toggle:active{opacity:0.7;}
 .pnl-yr-total-inline{font-size:13px;font-weight:700;}
+.pnl-yr-btn-ph{display:inline-block;width:40px;}
 </style>
 </head>
 <body>
@@ -1680,10 +1681,22 @@ function showCatYearDetail(cat){
 }
 function closeCatDetailModal(e){if(e.target===document.getElementById('cat-detail-modal'))document.getElementById('cat-detail-modal').classList.remove('open');}
 
+function getPnlYears(){
+  var ySet={};
+  Object.keys(state.dailyPnl||{}).forEach(function(k){
+    var y=parseInt(k.substring(0,4));
+    if(!isNaN(y))ySet[y]=1;
+  });
+  return Object.keys(ySet).map(Number).sort(function(a,b){return a-b;});
+}
 function renderYearSection(){
   var ct=document.getElementById('pnl-year-section');
   if(!ct)return;
-  if(!state.pnlYearView)state.pnlYearView=new Date().getFullYear();
+  var years=getPnlYears();
+  if(!years.length){ct.innerHTML='';return;}
+  if(!state.pnlYearView||years.indexOf(state.pnlYearView)===-1){
+    state.pnlYearView=years[years.length-1];
+  }
   var y=state.pnlYearView;
   var open=!!state.pnlYearOpen;
   var yearTotal=0;
@@ -1698,13 +1711,16 @@ function renderYearSection(){
   var tc=yearTotal>0?'pnl-yr-pos':yearTotal<0?'pnl-yr-neg':'';
   var totStr=(yearTotal>=0?'+':'')+yen(yearTotal);
   var arrow=open?'▼':'▶';
+  var idx=years.indexOf(y);
+  var prevBtn=idx>0?'<button class="pnl-yr-btn" onclick="prevPnlYear()">&#8592;</button>':'<span class="pnl-yr-btn-ph"></span>';
+  var nextBtn=idx<years.length-1?'<button class="pnl-yr-btn" onclick="nextPnlYear()">&#8594;</button>':'<span class="pnl-yr-btn-ph"></span>';
   ct.innerHTML=
     '<div class="stats-card">'
     +'<div class="pnl-yr-nav">'
-    +'<button class="pnl-yr-btn" onclick="prevPnlYear()">&#8592;</button>'
+    +prevBtn
     +'<span class="pnl-yr-toggle" onclick="togglePnlYear()">'+arrow+' '+y+'年'
     +'<span class="pnl-yr-total-inline '+tc+'"> '+totStr+'</span></span>'
-    +'<button class="pnl-yr-btn" onclick="nextPnlYear()">&#8594;</button>'
+    +nextBtn
     +'</div>'
     +(open
       ?'<table class="pnl-yr-table"><tbody>'+rows+'</tbody>'
@@ -1714,8 +1730,16 @@ function renderYearSection(){
     +'</div>';
 }
 function togglePnlYear(){state.pnlYearOpen=!state.pnlYearOpen;renderYearSection();}
-function prevPnlYear(){if(!state.pnlYearView)state.pnlYearView=new Date().getFullYear();state.pnlYearView--;renderYearSection();}
-function nextPnlYear(){if(!state.pnlYearView)state.pnlYearView=new Date().getFullYear();state.pnlYearView++;renderYearSection();}
+function prevPnlYear(){
+  var years=getPnlYears();
+  var idx=years.indexOf(state.pnlYearView);
+  if(idx>0){state.pnlYearView=years[idx-1];renderYearSection();}
+}
+function nextPnlYear(){
+  var years=getPnlYears();
+  var idx=years.indexOf(state.pnlYearView);
+  if(idx<years.length-1){state.pnlYearView=years[idx+1];renderYearSection();}
+}
 </script>
 <div class="pnl-modal" id="exp-add-modal" onclick="expAddModalBgClick(event)">
   <div class="pnl-modal-box">
