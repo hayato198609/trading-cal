@@ -452,6 +452,7 @@ header h1 { font-size: 17px; font-weight: 700; }
 .pnl-yr-toggle:active{opacity:0.7;}
 .pnl-yr-total-inline{font-size:13px;font-weight:700;}
 .pnl-yr-btn-ph{display:inline-block;width:40px;}
+.exp-year-total-row td{padding:6px 4px;font-weight:700;border-top:2px solid #eee;font-size:13px;}
 .pnl-yr-annual-row{display:flex;justify-content:space-between;align-items:center;padding:10px 4px 4px;border-top:2px solid #eee;margin-top:8px;font-size:14px;font-weight:700;}
 .pnl-yr-annual-val{font-size:15px;font-weight:700;}
 </style>
@@ -593,6 +594,7 @@ let state = {
   expenseCatTypes: [],
   expFixedFirst: true,
   expSelYear: TODAY.getFullYear(),
+  expYearView: TODAY.getFullYear(),
   expSelMonth: TODAY.getMonth()+1,
   assetSelYear: TODAY.getFullYear(),
   assetSelMonth: TODAY.getMonth() + 1,
@@ -1364,7 +1366,7 @@ function renderExpensePanel(){
   html+='<div id="exp-day-panel"></div>';
   html+=catHtml;
   html+='<div style="margin-top:14px;text-align:center"><button class="exp-add-cat-btn" onclick="addExpenseCat()">＋ カテゴリー追加</button></div>';
-  html+=renderExpMonthTable(y);
+  html+=renderExpYearSectionHtml();
   const list=document.getElementById('exp-cat-list');
   if(list){list.innerHTML=html;renderExpDayPanel();}
 }
@@ -1415,6 +1417,57 @@ function renderExpMonthTable(y){
   }
   html+='</tbody></table></div>';
   return html;
+}
+function getExpYears(){
+  var ySet={};
+  Object.keys(state.expenses||{}).forEach(function(k){
+    var y=parseInt(k.substring(0,4));
+    if(!isNaN(y))ySet[y]=1;
+  });
+  return Object.keys(ySet).map(Number).sort(function(a,b){return a-b;});
+}
+function renderExpYearSectionHtml(){
+  var years=getExpYears();
+  if(!years.length)return renderExpMonthTable(state.expSelYear);
+  if(!state.expYearView||years.indexOf(state.expYearView)===-1){
+    state.expYearView=years[years.length-1];
+  }
+  var y=state.expYearView;
+  var idx=years.indexOf(y);
+  var prevBtn=idx>0?'<button class="pnl-yr-btn" onclick="prevExpYear()">←</button>':'<span class="pnl-yr-btn-ph"></span>';
+  var nextBtn=idx<years.length-1?'<button class="pnl-yr-btn" onclick="nextExpYear()">→</button>':'<span class="pnl-yr-btn-ph"></span>';
+  var cats=state.expenseCategories||[];
+  var types=state.expenseCatTypes||[];
+  var yearFixed=0,yearVar=0;
+  var rows='';
+  for(var m=1;m<=12;m++){
+    var key=y+'-'+String(m).padStart(2,'0');
+    var monthExp=(state.expenses&&state.expenses[key])||{};
+    var fixedAmt=0,varAmt=0;
+    cats.forEach(function(cat,i){var amt=monthExp[cat]||0;if((types[i]||'var')==='fixed')fixedAmt+=amt;else varAmt+=amt;});
+    var _dt=state.deletedCatTypes||{};Object.keys(monthExp).forEach(function(cat){if(cats.indexOf(cat)===-1){var amt=monthExp[cat]||0;if(amt>0){if((_dt[cat]||'var')==='fixed')fixedAmt+=amt;else varAmt+=amt;}}});
+    var tot=fixedAmt+varAmt;
+    yearFixed+=fixedAmt;yearVar+=varAmt;
+    var isCur=(m===state.expSelMonth&&y===state.expSelYear);
+    rows+='<tr'+(isCur?' class="exp-month-cur"':'')+'><td>'+m+'月</td><td>'+(varAmt>0?yen(varAmt):'—')+'</td><td>'+(fixedAmt>0?yen(fixedAmt):'—')+'</td><td class="exp-mtot">'+(tot>0?yen(tot):'—')+'</td></tr>';
+  }
+  var yearTot=yearFixed+yearVar;
+  var html='<div class="exp-month-table-wrap">';
+  html+='<div class="pnl-yr-nav" style="margin-bottom:8px;">'+prevBtn+'<span style="font-size:14px;font-weight:700;">'+y+'年</span>'+nextBtn+'</div>';
+  html+='<table class="exp-month-table"><thead><tr><th></th><th>変動費</th><th>固定費</th><th>合計</th></tr></thead><tbody>'+rows+'</tbody>';
+  html+='<tfoot><tr class="exp-year-total-row"><td>年間</td><td>'+(yearVar>0?yen(yearVar):'—')+'</td><td>'+(yearFixed>0?yen(yearFixed):'—')+'</td><td class="exp-mtot">'+(yearTot>0?yen(yearTot):'—')+'</td></tr></tfoot>';
+  html+='</table></div>';
+  return html;
+}
+function prevExpYear(){
+  var years=getExpYears();
+  var idx=years.indexOf(state.expYearView);
+  if(idx>0){state.expYearView=years[idx-1];renderExpensePanel();}
+}
+function nextExpYear(){
+  var years=getExpYears();
+  var idx=years.indexOf(state.expYearView);
+  if(idx<years.length-1){state.expYearView=years[idx+1];renderExpensePanel();}
 }
 function renderExpDayPanel(){
   var panel=document.getElementById('exp-day-panel');
