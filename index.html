@@ -452,6 +452,8 @@ header h1 { font-size: 17px; font-weight: 700; }
 .pnl-yr-toggle:active{opacity:0.7;}
 .pnl-yr-total-inline{font-size:13px;font-weight:700;}
 .pnl-yr-btn-ph{display:inline-block;width:40px;}
+.pnl-yr-annual-row{display:flex;justify-content:space-between;align-items:center;padding:10px 4px 4px;border-top:2px solid #eee;margin-top:8px;font-size:14px;font-weight:700;}
+.pnl-yr-annual-val{font-size:15px;font-weight:700;}
 </style>
 </head>
 <body>
@@ -913,10 +915,9 @@ function renderStats(){
     +'<div class="year-quad-cell"><div class="year-quad-lbl">最大損失</div><div class="year-quad-val stat-neg">'+(worst!==null&&worst<0?yen(worst):'-')+'</div>'+(worst!==null&&worst<0?'<div class="year-quad-sub">'+fmtD(worstEntry[0])+'</div>':'')+'</div>'
     +'</div>'
     +(open
-      ?'<table class="pnl-yr-table"><tbody>'+rows+'</tbody>'
-      +'<tfoot><tr class="pnl-yr-total"><td>年間合計</td>'
-      +'<td class="pnl-yr-val '+tc+'">'+totStr+'</td></tr></tfoot></table>'
+      ?'<table class="pnl-yr-table"><tbody>'+rows+'</tbody></table>'
       :'')
+    +'<div class="pnl-yr-annual-row"><span>年間収支</span><span class="pnl-yr-annual-val '+tc+'">'+totStr+'</span></div>'
     +'</div>';
 }
 function renderMonthlyGrid() {
