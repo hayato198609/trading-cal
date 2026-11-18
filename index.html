@@ -847,12 +847,15 @@ function renderCalSummary() {
   set('s-monthly', monthly); set('s-yearly', yearly);
   renderMonthlyGrid();
   renderStats();
-  renderYearSection();
 }
 function renderStats(){
   const ct=document.getElementById('stats-section');
   if(!ct)return;
-  const y=state.calYear;
+  const years=getPnlYears();
+  if(!state.pnlYearView||years.indexOf(state.pnlYearView)===-1){
+    state.pnlYearView=years.length?years[years.length-1]:state.calYear;
+  }
+  const y=state.pnlYearView;
   const yStr=y+'-';
   const entries=Object.entries(state.dailyPnl).filter(([k])=>k.startsWith(yStr));
   const DN=['月','火','水','木','金'];
@@ -877,15 +880,44 @@ function renderStats(){
   }).join('');
   const wc=wr!==null&&wr>=50?'stat-pos':'stat-neg';
   const ac2=avg!==null&&avg>=0?'stat-pos':'stat-neg';
+  const idx=years.indexOf(y);
+  const prevBtn=idx>0?'<button class="pnl-yr-btn" onclick="prevPnlYear()">&#8592;</button>':'<span class="pnl-yr-btn-ph"></span>';
+  const nextBtn=idx<years.length-1?'<button class="pnl-yr-btn" onclick="nextPnlYear()">&#8594;</button>':'<span class="pnl-yr-btn-ph"></span>';
+  const open=!!state.pnlYearOpen;
+  const arrow=open?'▼':'▶';
+  let yearTotal=0;
+  let rows='';
+  for(let mo=1;mo<=12;mo++){
+    const val=calcMonthlyTotal(y,mo);
+    if(val!==null&&val!==undefined)yearTotal+=val;
+    const valStr=val!==null&&val!==undefined?(val>=0?'+':'')+yen(val):'—';
+    const vc=val===null||val===undefined?'':(val>0?'pnl-yr-pos':val<0?'pnl-yr-neg':'');
+    rows+='<tr><td class="pnl-yr-mo">'+mo+'月</td><td class="pnl-yr-val '+vc+'">'+valStr+'</td></tr>';
+  }
+  const tc=yearTotal>0?'pnl-yr-pos':yearTotal<0?'pnl-yr-neg':'';
+  const totStr=(yearTotal>=0?'+':'')+yen(yearTotal);
   ct.innerHTML=
     '<div class="stats-card"><div class="stats-card-title">曜日別平均損益</div><div class="dow-grid">'+dowHtml+'</div></div>'
-    +'<div class="stats-card"><div class="stats-card-title">'+y+'年の成績</div>'
+    +'<div class="stats-card">'
+    +'<div class="pnl-yr-nav">'
+    +prevBtn
+    +'<span class="pnl-yr-toggle" onclick="togglePnlYear()">'
+    +'<span class="pnl-yr-toggle-year">'+arrow+' '+y+'年の成績</span>'
+    +'</span>'
+    +nextBtn
+    +'</div>'
     +'<div class="year-quad">'
     +'<div class="year-quad-cell"><div class="year-quad-lbl">勝率</div><div class="year-quad-val '+wc+'">'+(wr!==null?wr+'%':'-')+'</div><div class="year-quad-sub">'+wins+'日 / '+tot+'日</div></div>'
     +'<div class="year-quad-cell"><div class="year-quad-lbl">平均損益</div><div class="year-quad-val '+ac2+'">'+(avg!==null?(avg>=0?'+':'')+yen(Math.round(avg)):'-')+'</div></div>'
     +'<div class="year-quad-cell"><div class="year-quad-lbl">最大利益</div><div class="year-quad-val stat-pos">'+(best!==null&&best>0?'+'+yen(best):'-')+'</div>'+(best!==null&&best>0?'<div class="year-quad-sub">'+fmtD(bestEntry[0])+'</div>':'')+'</div>'
     +'<div class="year-quad-cell"><div class="year-quad-lbl">最大損失</div><div class="year-quad-val stat-neg">'+(worst!==null&&worst<0?yen(worst):'-')+'</div>'+(worst!==null&&worst<0?'<div class="year-quad-sub">'+fmtD(worstEntry[0])+'</div>':'')+'</div>'
-    +'</div></div>';
+    +'</div>'
+    +(open
+      ?'<table class="pnl-yr-table"><tbody>'+rows+'</tbody>'
+      +'<tfoot><tr class="pnl-yr-total"><td>年間合計</td>'
+      +'<td class="pnl-yr-val '+tc+'">'+totStr+'</td></tr></tfoot></table>'
+      :'')
+    +'</div>';
 }
 function renderMonthlyGrid() {
   const container = document.getElementById('monthly-grid');
@@ -1692,56 +1724,18 @@ function getPnlYears(){
 }
 function renderYearSection(){
   var ct=document.getElementById('pnl-year-section');
-  if(!ct)return;
-  var years=getPnlYears();
-  if(!years.length){ct.innerHTML='';return;}
-  if(!state.pnlYearView||years.indexOf(state.pnlYearView)===-1){
-    state.pnlYearView=years[years.length-1];
-  }
-  var y=state.pnlYearView;
-  var open=!!state.pnlYearOpen;
-  var yearTotal=0;
-  var rows='';
-  for(var mo=1;mo<=12;mo++){
-    var val=calcMonthlyTotal(y,mo);
-    if(val!==null&&val!==undefined)yearTotal+=val;
-    var valStr=val!==null&&val!==undefined?(val>=0?'+':'')+yen(val):'—';
-    var vc=val===null||val===undefined?'':(val>0?'pnl-yr-pos':val<0?'pnl-yr-neg':'');
-    rows+='<tr><td class="pnl-yr-mo">'+mo+'月</td><td class="pnl-yr-val '+vc+'">'+valStr+'</td></tr>';
-  }
-  var tc=yearTotal>0?'pnl-yr-pos':yearTotal<0?'pnl-yr-neg':'';
-  var totStr=(yearTotal>=0?'+':'')+yen(yearTotal);
-  var arrow=open?'▼':'▶';
-  var idx=years.indexOf(y);
-  var prevBtn=idx>0?'<button class="pnl-yr-btn" onclick="prevPnlYear()">&#8592;</button>':'<span class="pnl-yr-btn-ph"></span>';
-  var nextBtn=idx<years.length-1?'<button class="pnl-yr-btn" onclick="nextPnlYear()">&#8594;</button>':'<span class="pnl-yr-btn-ph"></span>';
-  ct.innerHTML=
-    '<div class="stats-card">'
-    +'<div class="pnl-yr-nav">'
-    +prevBtn
-    +'<span class="pnl-yr-toggle" onclick="togglePnlYear()">'
-    +'<span class="pnl-yr-toggle-year">'+arrow+' '+y+'年</span>'
-    +'<span class="pnl-yr-total-inline '+tc+'">'+totStr+'</span>'
-    +'</span>'
-    +nextBtn
-    +'</div>'
-    +(open
-      ?'<table class="pnl-yr-table"><tbody>'+rows+'</tbody>'
-      +'<tfoot><tr class="pnl-yr-total"><td>年間合計</td>'
-      +'<td class="pnl-yr-val '+tc+'">'+totStr+'</td></tr></tfoot></table>'
-      :'')
-    +'</div>';
+  if(ct)ct.innerHTML='';
 }
-function togglePnlYear(){state.pnlYearOpen=!state.pnlYearOpen;renderYearSection();}
+function togglePnlYear(){state.pnlYearOpen=!state.pnlYearOpen;renderStats();}
 function prevPnlYear(){
   var years=getPnlYears();
   var idx=years.indexOf(state.pnlYearView);
-  if(idx>0){state.pnlYearView=years[idx-1];renderYearSection();}
+  if(idx>0){state.pnlYearView=years[idx-1];renderStats();}
 }
 function nextPnlYear(){
   var years=getPnlYears();
   var idx=years.indexOf(state.pnlYearView);
-  if(idx<years.length-1){state.pnlYearView=years[idx+1];renderYearSection();}
+  if(idx<years.length-1){state.pnlYearView=years[idx+1];renderStats();}
 }
 </script>
 <div class="pnl-modal" id="exp-add-modal" onclick="expAddModalBgClick(event)">
