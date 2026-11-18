@@ -436,6 +436,17 @@ header h1 { font-size: 17px; font-weight: 700; }
 .cat-name-link{cursor:pointer;color:#2980b9;text-decoration:underline;}
 .cat-name-link:active{opacity:0.7;}
 .cat-detail-total{display:flex;justify-content:space-between;font-weight:700;padding:8px 4px 0;border-top:1px solid #eee;margin-top:4px;}
+/* 年間収支セクション */
+.pnl-yr-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.pnl-yr-btn{background:none;border:1px solid #ddd;border-radius:6px;padding:4px 14px;font-size:16px;cursor:pointer;color:#555;-webkit-tap-highlight-color:transparent;}
+.pnl-yr-btn:active{background:#f0f0f0;}
+.pnl-yr-title{font-size:15px;font-weight:700;color:#1a1a2e;}
+.pnl-yr-table{width:100%;border-collapse:collapse;font-size:13px;}
+.pnl-yr-mo{padding:5px 4px;color:#666;font-weight:600;width:50%;}
+.pnl-yr-val{padding:5px 4px;text-align:right;font-weight:700;width:50%;color:#ccc;}
+.pnl-yr-pos{color:#1e8a4a;}
+.pnl-yr-neg{color:#c0392b;}
+.pnl-yr-total td{padding:8px 4px;font-weight:700;border-top:2px solid #eee;font-size:14px;}
 </style>
 </head>
 <body>
@@ -495,6 +506,7 @@ header h1 { font-size: 17px; font-weight: 700; }
       </div>
       <div id="monthly-grid"></div>
       <div class="stats-section" id="stats-section"></div>
+      <div id="pnl-year-section" style="margin-top:14px;padding:0 2px"></div>
     </div>
   </div>
 
@@ -561,6 +573,7 @@ let state = {
   dailyPnl: {},
   calYear:   TODAY.getFullYear(),
   calMonth:  TODAY.getMonth(),
+  pnlYearView: TODAY.getFullYear(),
   categories:   ['現金・預金'],
   assetInput:   {},
   assetRecords: {},  // { "YYYY-MM-DD": {total, values} }
@@ -828,6 +841,7 @@ function renderCalSummary() {
   set('s-monthly', monthly); set('s-yearly', yearly);
   renderMonthlyGrid();
   renderStats();
+  renderYearSection();
 }
 function renderStats(){
   const ct=document.getElementById('stats-section');
@@ -1661,6 +1675,36 @@ function showCatYearDetail(cat){
   document.getElementById('cat-detail-modal').classList.add('open');
 }
 function closeCatDetailModal(e){if(e.target===document.getElementById('cat-detail-modal'))document.getElementById('cat-detail-modal').classList.remove('open');}
+
+function renderYearSection(){
+  var ct=document.getElementById('pnl-year-section');
+  if(!ct)return;
+  if(!state.pnlYearView)state.pnlYearView=new Date().getFullYear();
+  var y=state.pnlYearView;
+  var yearTotal=0;
+  var rows='';
+  for(var mo=1;mo<=12;mo++){
+    var val=calcMonthlyTotal(y,mo);
+    if(val!==null&&val!==undefined)yearTotal+=val;
+    var valStr=val!==null&&val!==undefined?(val>=0?'+':'')+yen(val):'—';
+    var vc=val===null||val===undefined?'':(val>0?'pnl-yr-pos':val<0?'pnl-yr-neg':'');
+    rows+='<tr><td class="pnl-yr-mo">'+mo+'月</td><td class="pnl-yr-val '+vc+'">'+valStr+'</td></tr>';
+  }
+  var tc=yearTotal>0?'pnl-yr-pos':yearTotal<0?'pnl-yr-neg':'';
+  ct.innerHTML=
+    '<div class="stats-card">'
+    +'<div class="pnl-yr-nav">'
+    +'<button class="pnl-yr-btn" onclick="prevPnlYear()">&#8592;</button>'
+    +'<span class="pnl-yr-title">'+y+'年</span>'
+    +'<button class="pnl-yr-btn" onclick="nextPnlYear()">&#8594;</button>'
+    +'</div>'
+    +'<table class="pnl-yr-table"><tbody>'+rows+'</tbody>'
+    +'<tfoot><tr class="pnl-yr-total"><td>年間合計</td>'
+    +'<td class="pnl-yr-val '+tc+'">'+(yearTotal>=0?'+':'')+yen(yearTotal)+'</td></tr></tfoot>'
+    +'</table></div>';
+}
+function prevPnlYear(){if(!state.pnlYearView)state.pnlYearView=new Date().getFullYear();state.pnlYearView--;renderYearSection();}
+function nextPnlYear(){if(!state.pnlYearView)state.pnlYearView=new Date().getFullYear();state.pnlYearView++;renderYearSection();}
 </script>
 <div class="pnl-modal" id="exp-add-modal" onclick="expAddModalBgClick(event)">
   <div class="pnl-modal-box">
